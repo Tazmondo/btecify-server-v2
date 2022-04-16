@@ -6,8 +6,9 @@ authors = ["Tazmondo <fondcoolman@outlook.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.75.1"
-uvicorn = "^0.17.6"
+fastapi = "0.75.1"
+uvicorn = "0.17.6"
+SQLAlchemy = "^1.4.35"
 
 [tool.poetry.dev-dependencies]
 
