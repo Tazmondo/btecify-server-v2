@@ -11,11 +11,12 @@ playlist_song_table = Table(
 
 
 class Song(Base):
+    __tablename__ = "Song"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     album = Column(String, nullable=True)
     duration = Column(Integer, nullable=True)
-    extractor = Column(String, nullable=True)
+    extractor = Column(String, nullable=False)
     weburl = Column(String, nullable=True)
 
     disabled = Column(Boolean, nullable=False, default=False)
@@ -30,6 +31,7 @@ class Song(Base):
 
 
 class Artist(Base):
+    __tablename__ = "Artist"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
 
@@ -37,6 +39,7 @@ class Artist(Base):
 
 
 class Playlist(Base):
+    __tablename__ = "Playlist"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     thumbnail = Column(LargeBinary, nullable=True)
@@ -45,6 +48,7 @@ class Playlist(Base):
 
 
 class User(Base):
+    __tablename__ = "User"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
