@@ -222,10 +222,18 @@ h11 = ">=0.8"
 [package.extras]
 standard = ["websockets (>=10.0)", "httptools (>=0.4.0)", "watchgod (>=0.6)", "python-dotenv (>=0.13)", "PyYAML (>=5.1)", "uvloop (>=0.14.0,!=0.15.0,!=0.15.1)", "colorama (>=0.4)"]
 
+[[package]]
+name = "youtube-dl"
+version = "2021.12.17"
+description = "YouTube video downloader"
+category = "main"
+optional = false
+python-versions = "*"
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "ed6497ec01aa13b9e93d2bc1a5fc01e36e577ea1f9c5f999eb43db1590fa27e1"
+content-hash = "c1290c73a2e9b4ce7db6e535f22a95f3c67695ecc9f5f06bd4bd946903cf8f35"
 
 [metadata.files]
 alembic = [
@@ -453,4 +461,8 @@ typing-extensions = [
 uvicorn = [
     {file = "uvicorn-0.17.6-py3-none-any.whl", hash = "sha256:19e2a0e96c9ac5581c01eb1a79a7d2f72bb479691acd2b8921fce48ed5b961a6"},
     {file = "uvicorn-0.17.6.tar.gz", hash = "sha256:5180f9d059611747d841a4a4c4ab675edf54c8489e97f96d0583ee90ac3bfc23"},
+]
+youtube-dl = [
+    {file = "youtube_dl-2021.12.17-py2.py3-none-any.whl", hash = "sha256:f1336d5de68647e0364a47b3c0712578e59ec76f02048ff5c50ef1c69d79cd55"},
+    {file = "youtube_dl-2021.12.17.tar.gz", hash = "sha256:bc59e86c5d15d887ac590454511f08ce2c47698d5a82c27bfe27b5d814bbaed2"},
 ]
