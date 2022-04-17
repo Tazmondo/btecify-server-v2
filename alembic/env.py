@@ -9,6 +9,10 @@ from alembic import context
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+url = config.get_main_option("sqlalchemy.url")
+
+if url[:7] == "sqlite:":
+    batchmode = True
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -40,12 +44,12 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=batchmode
     )
 
     with context.begin_transaction():
@@ -67,7 +71,9 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            render_as_batch=batchmode
         )
 
         with context.begin_transaction():
