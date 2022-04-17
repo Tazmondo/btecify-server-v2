@@ -1,6 +1,6 @@
 from pathlib import Path
 from json import load as jsonload
-from uuid import uuid4
+from uuid import uuid4 as makeUUID
 from yt_dlp import YoutubeDL as Extractinator
 import schemas
 
@@ -11,44 +11,64 @@ if not extractDir.exists():
 [x.unlink() for x in extractDir.iterdir()]  # Remove any existing files
 
 
+def readData(file: Path) -> bytes:
+    with file.open("rb") as f:
+        filedata = f.read()
+
+    file.unlink()
+    return filedata
+
+
 def downloadSong(url: str) -> schemas.SongDownload:
-    newuuid = str(uuid4())  # Use uuid to prevent any name collisions with multiple downloads at once
+    uuid = str(makeUUID())  # Use uuid to prevent any name collisions with multiple downloads at once
     options = {
         "noplaylist": True,
+        "playlistend": 0,  # Ensures that playlists aren't downloaded
         "format": "worstaudio",
-        "outtmpl": f'./extractions/{newuuid}',
-        "writeinfojson": True
+        "outtmpl": f'./extractions/{uuid}',
+        "writethumbnail": True
     }
 
     with Extractinator(options) as downloader:
+        info = downloader.extract_info(url)
+        if info.get('_type') == "playlist":
+            raise ValueError("Playlist url provided.")
         downloader.download([url])
 
-    file = Path(f"./extractions/{newuuid}")
-    infofile = Path(file.as_posix()+'.info.json')
+    file = Path(info['requested_downloads'][0]['filepath'])
+    thumbfile = Path(info['thumbnails'][-1]['filepath'])
 
     try:  # Read music data
-        with file.open("rb") as f:
-            filedata = f.read()
-
-        file.unlink()
+        filedata = readData(file)
+        pass
     except FileNotFoundError:
         filedata = None
 
 
-    try:  # Read json information
-        with infofile.open("rb") as f:
-            info = jsonload(f)
-
-        infofile.unlink()
+    try:  # Read music data
+        thumbdata = readData(thumbfile)
+        pass
     except FileNotFoundError:
-        info = None
+        thumbdata = None
 
-    return {"data": filedata, "info": info}
+    return schemas.SongDownload(data=filedata, info=info, thumbdata=thumbdata)
+
+
+# Perhaps take a progress callback parameter, so progress can be updated as it downloads large playlists.
+def downloadPlaylist(url: str) -> schemas.PlaylistDownload:
+    uuid = makeUUID()
+
+    pass
 
 
 if __name__ == "__main__":
     testurl = "https://www.youtube.com/watch?v=ntX9LYIc5Ak&t=8s"
-    downloadSong(testurl)
+    testurl1 = "https://www.youtube.com/playlist?list=PL22baOOM5dLdXrvuaxtquOQnnzB8mW6JB"
+    testurl2 = "https://abductedbysharks.bandcamp.com/album/hammerhead"
+    testurl3 = "https://abductedbysharks.bandcamp.com/track/hammerhead"
+    x = downloadSong(testurl)
+    print(x)
+    pass
 
 
 

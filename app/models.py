@@ -22,8 +22,10 @@ class Song(Base):
     disabled = Column(Boolean, nullable=False, default=False)
 
     data = Column(LargeBinary, nullable=True)
-    extension = Column(String, nullable=True)
+    dataext = Column(String, nullable=True)
+
     thumbnail = Column(LargeBinary, nullable=True)
+    thumbnailext = Column(String, nullable=True)
 
     artist_id = Column(Integer, ForeignKey('Artist.id'))
     artist = relationship("Artist", back_populates="songs")
