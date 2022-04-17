@@ -22,6 +22,7 @@ class Song(Base):
     disabled = Column(Boolean, nullable=False, default=False)
 
     data = Column(LargeBinary, nullable=True)
+    extension = Column(String, nullable=True)
     thumbnail = Column(LargeBinary, nullable=True)
 
     artist_id = Column(Integer, ForeignKey('Artist.id'))
