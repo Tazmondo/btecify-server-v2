@@ -17,15 +17,16 @@ class Song(Base):
     album = Column(String, nullable=True)
     duration = Column(Integer, nullable=True)
     extractor = Column(String, nullable=False)
-    weburl = Column(String, nullable=True)
 
     disabled = Column(Boolean, nullable=False, default=False)
 
     data = Column(LargeBinary, nullable=True)
     dataext = Column(String, nullable=True)
+    weburl = Column(String, nullable=True)
 
     thumbnail = Column(LargeBinary, nullable=True)
     thumbnailext = Column(String, nullable=True)
+    thumburl = Column(String, nullable=True)
 
     artist_id = Column(Integer, ForeignKey('Artist.id'))
     artist = relationship("Artist", back_populates="songs")
