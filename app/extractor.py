@@ -1,44 +1,53 @@
 from pathlib import Path
-
-from youtube_dl import YoutubeDL as yt
+from json import load as jsonload
+from uuid import uuid4
+from yt_dlp import YoutubeDL as Extractinator
 import schemas
 
-testurl = "https://www.youtube.com/watch?v=ntX9LYIc5Ak&t=8s"
+extractDir = Path('./extractions')
+if not extractDir.exists():
+    extractDir.mkdir()
 
-
-def progressHook(d):
-    if d['status'] == "finished":
-        file = Path(".\\"+d['filename'])
-
-        try:
-            with file.open("rb") as f:
-                filebytes = f.read()
-                print(filebytes)
-            file.rmdir()
-
-        except FileNotFoundError:
-            pass
+[x.unlink() for x in extractDir.iterdir()]  # Remove any existing files
 
 
 def downloadSong(url: str) -> schemas.SongDownload:
-    extractDir = Path('./extractions')
-    if not extractDir.exists():
-        extractDir.mkdir()
-
+    newuuid = str(uuid4())  # Use uuid to prevent any name collisions with multiple downloads at once
     options = {
         "noplaylist": True,
         "format": "worstaudio",
-        "progress_hooks": [progressHook],
-        "outtmpl": './extractions/%(title)s.%(ext)s'
+        "outtmpl": f'./extractions/{newuuid}',
+        "writeinfojson": True
     }
 
-    with yt(options) as downloader:
+    with Extractinator(options) as downloader:
         downloader.download([url])
 
+    file = Path(f"./extractions/{newuuid}")
+    infofile = Path(file.as_posix()+'.info.json')
 
+    try:  # Read music data
+        with file.open("rb") as f:
+            filedata = f.read()
+
+        file.unlink()
+    except FileNotFoundError:
+        filedata = None
+
+
+    try:  # Read json information
+        with infofile.open("rb") as f:
+            info = jsonload(f)
+
+        infofile.unlink()
+    except FileNotFoundError:
+        info = None
+
+    return {"data": filedata, "info": info}
 
 
 if __name__ == "__main__":
+    testurl = "https://www.youtube.com/watch?v=ntX9LYIc5Ak&t=8s"
     downloadSong(testurl)
 
 
