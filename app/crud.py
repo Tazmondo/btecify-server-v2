@@ -13,8 +13,8 @@ def addSong(song: schemas.Song):
     data = downloadSong(song.weburl)
 
 
-async def dbDownloadSong(db: Session, song: models.Song):
-    song = await fetchSong(song)
+async def dbDownloadSong(db: Session, song: models.Song, force: bool = False):
+    song = await fetchSong(song, force)
 
     db.commit()
     return song
@@ -76,6 +76,14 @@ async def getSongSource(song: models.Song, db: Session):
     song = await dbDownloadSong(db, song)
 
     return song
+
+
+async def getSongThumb(song: models.Song, db: Session):
+    song = await dbDownloadSong(db, song, True)
+    if song.thumbnail is not None:
+        return song
+    else:
+        return False
 
 
 def fullSync(syncdata: schemas.FullSync, db: Session):

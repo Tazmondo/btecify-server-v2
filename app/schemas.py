@@ -31,3 +31,7 @@ class PlaylistIn(BaseModel):
 
 class FullSync(BaseModel):
     playlists: list[PlaylistIn]
+
+
+class ExceptionResponse(BaseModel):
+    detail: str
