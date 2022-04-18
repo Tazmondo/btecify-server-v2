@@ -31,12 +31,14 @@ def downloadSong(url: str) -> schemas.SongDownload:
 
     with Extractinator(options) as downloader:
         info = downloader.extract_info(url)
-        if info.get('_type') == "playlist":
-            raise ValueError("Playlist url provided.")
-        downloader.download([url])
 
     file = Path(info['requested_downloads'][0]['filepath'])
     thumbfile = Path(info['thumbnails'][-1]['filepath'])
+
+    if info.get('_type') == "playlist":
+        file.unlink()
+        thumbfile.unlink()
+        raise ValueError("Playlist url provided.")
 
     try:  # Read music data
         filedata = readData(file)
