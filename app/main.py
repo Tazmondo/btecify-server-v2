@@ -42,11 +42,6 @@ getSongResponses = {
 }
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
 @app.get('/src/{songid}', responses={
     200: {
         "content": {"audio/{requested data extension}": {}},
@@ -96,7 +91,31 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
     return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{dbsong.thumbnailext}")
 
 
+@app.get('/playlists', response_model=list[schemas.Playlist])
+async def getPlaylists(db=Depends(getdb)):
+    return db.query(models.Playlist).all()
+
+
+@app.get('/playlist/{playlistid}', response_model=schemas.Playlist)
+async def getPlaylist(playlistid: int, db: Session = Depends(getdb)):
+    return db.query(models.Playlist).get(playlistid)
+
+
+@app.get('/song/{songid}', response_model=schemas.Song)
+async def getSong(songid: int, db: Session = Depends(getdb)):
+    return db.query(models.Song).get(songid)
+
 
 @app.post('/fullsync')
 async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
     crud.fullSync(syncdata, db)
+
+
+print("http://127.0.0.1:8000/docs")
+
+if __name__ == "__main__":
+    print("main")
+    db: Session = SessionLocal()
+    testplaylist = db.query(models.Playlist).filter(models.Playlist.title == "eternal raijin").first()
+
+    print(schemas.Playlist.from_orm(testplaylist))
