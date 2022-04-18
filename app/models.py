@@ -18,7 +18,7 @@ class PlaylistSong(Base):
 
 class Song(Base):
     __tablename__ = "song"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     duration = Column(Float, nullable=True)
     extractor = Column(String, nullable=False)
@@ -44,7 +44,7 @@ class Song(Base):
 
 class Album(Base):
     __tablename__ = "album"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
 
     artist_id = Column(Integer, ForeignKey('artist.id'))
@@ -55,7 +55,7 @@ class Album(Base):
 
 class Artist(Base):
     __tablename__ = "artist"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False, unique=True)
 
     songs = relationship("Song", back_populates="artist")
@@ -64,7 +64,7 @@ class Artist(Base):
 
 class Playlist(Base):
     __tablename__ = "playlist"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     thumbnail = Column(LargeBinary, nullable=True)
 
@@ -73,7 +73,7 @@ class Playlist(Base):
 
 class User(Base):
     __tablename__ = "user"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     username = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     admin = Column(Boolean, default=False)
