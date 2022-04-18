@@ -14,7 +14,7 @@ if Path(getcwd()).name == 'btecify-server':
 elif Path(getcwd()).name == "app":
     SQLALCHEMY_DATABASE_URL = "sqlite:///../db/" + dbname
 else:
-    raise Exception(f"Unknown path: {getcwd()}")
+    raise Exception(f"Unknown path: ", getcwd())
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 

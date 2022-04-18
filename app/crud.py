@@ -13,7 +13,14 @@ def addSong(song: schemas.Song):
     data = downloadSong(song.weburl)
 
 
-async def downloadPlaylist(db: Session, playlist: models.Playlist):
+async def dbDownloadSong(db: Session, song: models.Song):
+    song = await fetchSong(song)
+
+    db.commit()
+    return song
+
+
+async def dbDownloadPlaylist(db: Session, playlist: models.Playlist):
     songs = db.query(models.Song) \
         .join(models.Song.playlists) \
         .filter(models.PlaylistSong.playlist_id == playlist.id) \
@@ -24,7 +31,7 @@ async def downloadPlaylist(db: Session, playlist: models.Playlist):
     return results
 
 
-async def downloadAll(db: Session):
+async def dbDownloadAll(db: Session):
     songs: list[models.Song] = db.query(models.Song).all()
 
     results = await fetchSongs(songs)
@@ -59,6 +66,15 @@ async def fetchSong(song: models.Song, force: bool = False):
                 print(f"\n\nDISABLING {song.title}, COULD BE UNAVAILABLE.\n{e.msg}\n")
                 song.disabled = True
             raise e
+    return song
+
+
+async def getSongSource(song: models.Song, db: Session):
+    if song.disabled:
+        raise ValueError(f"Disabled song was passed to getSongSource.", song)
+
+    song = await dbDownloadSong(db, song)
+
     return song
 
 
@@ -201,5 +217,5 @@ if __name__ == "__main__":
     # asyncio.run(downloadPlaylist(db, testPlaylist))
 
     # print(list(filter(lambda a: type(a) is not models.Song, asyncio.run(downloadAll(db)) )))
-    print(asyncio.run(downloadAll(db)))
+    print(asyncio.run(dbDownloadAll(db)))
     # asyncio.run(downloadPlaylist(db, db.query(models.Playlist).filter(models.Playlist.title=="music").first()))
