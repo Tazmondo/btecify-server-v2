@@ -12,11 +12,11 @@ class PlaylistDownload:
     songs: list[SongDownload]
 
 
-class SongIn(BaseModel):
+class Song(BaseModel):
     title: str
     album: str | None
-    duration: int
-    extractor: str | None
+    duration: float
+    extractor: str
     weburl: str | None
     thumburl: str | None
     artist: str
@@ -24,7 +24,7 @@ class SongIn(BaseModel):
 
 class PlaylistIn(BaseModel):
     title: str
-    songs: list[SongIn]
+    songs: list[Song]
 
 
 class FullSync(BaseModel):
