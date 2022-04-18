@@ -87,6 +87,7 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
                     duration=song.duration,
                     extractor=song.extractor,
                     thumburl=song.thumburl,
+                    weburl=song.weburl
                 )
 
                 songsDict[song.weburl] = ormsong
