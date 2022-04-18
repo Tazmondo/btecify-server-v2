@@ -1,10 +1,14 @@
+import asyncio
+from logging import Logger
 from pathlib import Path
-from json import load as jsonload
-from uuid import uuid4 as makeUUID
 from urllib.parse import urlparse
+from uuid import uuid4 as makeUUID
 
 from yt_dlp import YoutubeDL as Extractinator
+
 import app.schemas as schemas
+
+locallogger = Logger("yt-dl logger", 100000)  # So that stdout isnt spammed by yt-dl
 
 extractDir = Path('./extractions')
 if not extractDir.exists():
@@ -21,18 +25,28 @@ def readData(file: Path) -> bytes:
     return filedata
 
 
-def downloadSong(url: str) -> schemas.SongDownload:
+def download(options, url):
+    with Extractinator(options) as downloader:
+        info = downloader.extract_info(url)
+    return info
+
+
+async def downloadSong(url: str) -> schemas.SongDownload:
+    loop = asyncio.get_event_loop()
+
     uuid = str(makeUUID())  # Use uuid to prevent any name collisions with multiple downloads at once
     options = {
         "noplaylist": True,
         "playlistend": 0,  # Ensures that playlists aren't downloaded
         "format": "worstaudio",
         "outtmpl": f'./extractions/{uuid}',
-        "writethumbnail": True
+        "writethumbnail": True,
+        "quiet": True,
+        "no_warnings": True,
+        "logger": locallogger
     }
 
-    with Extractinator(options) as downloader:
-        info = downloader.extract_info(url)
+    info = await loop.run_in_executor(None, download, options, url)
 
     file = Path(info['requested_downloads'][0]['filepath'])
     thumbfile = Path(info['thumbnails'][-1]['filepath'])
@@ -76,8 +90,14 @@ if __name__ == "__main__":
     testurl1 = "https://www.youtube.com/playlist?list=PL22baOOM5dLdXrvuaxtquOQnnzB8mW6JB"
     testurl2 = "https://abductedbysharks.bandcamp.com/album/hammerhead"
     testurl3 = "https://abductedbysharks.bandcamp.com/track/hammerhead"
-    x = downloadSong(testurl)
-    print(x)
+
+
+    async def start():
+        x = await downloadSong(testurl)
+        print(x)
+
+
+    asyncio.run(start())
     pass
 
 

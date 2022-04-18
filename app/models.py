@@ -1,7 +1,9 @@
-from sqlalchemy import Table, Column, ForeignKey, String, Integer, LargeBinary, Boolean, Float, DateTime
+from os import environ
+
+from sqlalchemy import Column, ForeignKey, String, Integer, LargeBinary, Boolean, Float, DateTime
 from sqlalchemy.orm import relationship
 
-from .db import Base
+from .db import Base, engine
 
 
 class PlaylistSong(Base):
@@ -27,7 +29,7 @@ class Song(Base):
     dataext = Column(String, nullable=True)
     weburl = Column(String, nullable=True, unique=True)
 
-    thumbnail = Column(LargeBinary, nullable=True)
+    thumbnail = Column(LargeBinary, nullable=True)  # todo: move to separate table and use hashes for comparison
     thumbnailext = Column(String, nullable=True)
     thumburl = Column(String, nullable=True)
 
@@ -69,10 +71,13 @@ class Playlist(Base):
     songs = relationship('PlaylistSong', back_populates='playlist')
 
 
-
 class User(Base):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     admin = Column(Boolean, default=False)
+
+
+if environ.get('testdb'):
+    Base.metadata.create_all(bind=engine)

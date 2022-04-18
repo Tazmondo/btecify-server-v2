@@ -1,9 +1,11 @@
+import asyncio
 from datetime import datetime
 
 from sqlalchemy.orm import Session
+from yt_dlp.utils import DownloadError
 
-import app.schemas as schemas
 import app.models as models
+import app.schemas as schemas
 from app.extractor import downloadSong
 
 
@@ -11,18 +13,53 @@ def addSong(song: schemas.Song):
     data = downloadSong(song.weburl)
 
 
-def downloadAll(db: Session):
+async def downloadPlaylist(db: Session, playlist: models.Playlist):
+    songs = db.query(models.Song) \
+        .join(models.Song.playlists) \
+        .filter(models.PlaylistSong.playlist_id == playlist.id) \
+        .all()
+
+    results = await fetchSongs(songs)
+    db.commit()
+    return results
+
+
+async def downloadAll(db: Session):
     songs: list[models.Song] = db.query(models.Song).all()
 
-    for song in songs:
+    results = await fetchSongs(songs)
+    db.commit()
 
-        songdownload = downloadSong(song.weburl)
-        song.data = songdownload.data
-        song.dataext = songdownload.dataext
+    return results
 
-        song.thumburl = songdownload.info['thumbnail']
-        song.thumbnail = songdownload.thumbdata
-        song.thumbnailext = songdownload.thumbext
+
+async def fetchSongs(songs: list[models.Song]):
+    # Fetch all songs concurrently
+    results = await asyncio.gather(*[fetchSong(song) for song in songs], return_exceptions=True)
+    failures = list(filter(lambda a: a not in results, songs))
+    return failures
+
+
+async def fetchSong(song: models.Song, force: bool = False):
+    if ((song.data is None or song.dataext is None) and not song.disabled) or force:
+        print(f"Fetching... {song.title} : {song.weburl}")
+        try:
+            songdownload = await downloadSong(song.weburl)
+
+            song.data = songdownload.data
+            song.dataext = songdownload.dataext
+
+            song.thumburl = songdownload.info['thumbnail']
+            song.thumbnail = songdownload.thumbdata
+            song.thumbnailext = songdownload.thumbext
+
+            song.disabled = False
+        except DownloadError as e:
+            if "video" in e.msg.lower():
+                print(f"\n\nDISABLING {song.title}, COULD BE UNAVAILABLE.\n{e.msg}\n")
+                song.disabled = True
+            raise e
+    return song
 
 
 def fullSync(syncdata: schemas.FullSync, db: Session):
@@ -126,9 +163,43 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
     db.commit()
 
 
-
 if __name__ == "__main__":
-    from main import SessionLocal
+    from app.db import SessionLocal
+
     db: Session = SessionLocal()
 
-    db.commit()
+    fakeSong = models.Song(
+        title="test1",
+        duration=5,
+        extractor="testextractor",
+        weburl="bogusurl",
+
+    )
+    realSong = models.Song(
+        title="testw",
+        duration=5,
+        extractor="youtube",
+        weburl="youtube.com/watch?v=Y5KFnQYCdsk",
+
+    )
+    testPlaylist = models.Playlist(
+        title="testplaylist"
+    )
+    models.PlaylistSong(
+        dateadded=datetime.now(),
+        song=fakeSong,
+        playlist=testPlaylist
+    )
+    models.PlaylistSong(
+        dateadded=datetime.now(),
+        song=realSong,
+        playlist=testPlaylist
+    )
+    # db.add(testPlaylist)
+
+    testPlaylist = db.query(models.Playlist).first()
+    # asyncio.run(downloadPlaylist(db, testPlaylist))
+
+    # print(list(filter(lambda a: type(a) is not models.Song, asyncio.run(downloadAll(db)) )))
+    print(asyncio.run(downloadAll(db)))
+    # asyncio.run(downloadPlaylist(db, db.query(models.Playlist).filter(models.Playlist.title=="music").first()))
