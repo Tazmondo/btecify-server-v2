@@ -42,4 +42,3 @@ async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
     crud.fullSync(syncdata, db)
 
 
-# todo: get artists, then merge on client transfer to server, eliminate similar names and merge into 1

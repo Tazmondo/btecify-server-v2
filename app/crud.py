@@ -24,6 +24,9 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
     playlistDict = {}
     albumDict = {}
 
+
+    # Initialise dicts with regular data instead of ORM.
+
     # for playlist in playlists:
     #
     #     # Initialise this playlist
@@ -106,7 +109,6 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
         db.add(playlistDict[playlist.title])
 
     db.commit()
-    print("Done")
 
 
 
