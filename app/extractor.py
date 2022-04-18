@@ -1,6 +1,8 @@
 from pathlib import Path
 from json import load as jsonload
 from uuid import uuid4 as makeUUID
+from urllib.parse import urlparse
+
 from yt_dlp import YoutubeDL as Extractinator
 import app.schemas as schemas
 
@@ -53,7 +55,13 @@ def downloadSong(url: str) -> schemas.SongDownload:
     except FileNotFoundError:
         thumbdata = None
 
-    return schemas.SongDownload(data=filedata, info=info, thumbdata=thumbdata)
+    return schemas.SongDownload(
+        data=filedata,
+        dataext=info['ext'],
+        thumbdata=thumbdata,
+        thumbext=Path(urlparse(info['thumbnail']).path).suffix,  # Get extension from web url
+        info=info,
+    )
 
 
 # Perhaps take a progress callback parameter, so progress can be updated as it downloads large playlists.
@@ -64,15 +72,13 @@ def downloadPlaylist(url: str) -> schemas.PlaylistDownload:
 
 
 if __name__ == "__main__":
-    testurl = "https://www.youtube.com/watch?v=ntX9LYIc5Ak&t=8s"
+    testurl = "youtube.com/watch?v=cxFFhUvlRiM"
     testurl1 = "https://www.youtube.com/playlist?list=PL22baOOM5dLdXrvuaxtquOQnnzB8mW6JB"
     testurl2 = "https://abductedbysharks.bandcamp.com/album/hammerhead"
     testurl3 = "https://abductedbysharks.bandcamp.com/track/hammerhead"
     x = downloadSong(testurl)
     print(x)
     pass
-
-
 
 
 """

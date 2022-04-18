@@ -11,6 +11,20 @@ def addSong(song: schemas.Song):
     data = downloadSong(song.weburl)
 
 
+def downloadAll(db: Session):
+    songs: list[models.Song] = db.query(models.Song).all()
+
+    for song in songs:
+
+        songdownload = downloadSong(song.weburl)
+        song.data = songdownload.data
+        song.dataext = songdownload.dataext
+
+        song.thumburl = songdownload.info['thumbnail']
+        song.thumbnail = songdownload.thumbdata
+        song.thumbnailext = songdownload.thumbext
+
+
 def fullSync(syncdata: schemas.FullSync, db: Session):
     db.query(models.Song).delete()
     db.query(models.Album).delete()

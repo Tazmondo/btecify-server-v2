@@ -3,7 +3,9 @@ from pydantic import BaseModel
 
 class SongDownload(BaseModel):
     data: bytes
+    dataext: str
     thumbdata: bytes
+    thumbext: str
     info: dict
 
 
