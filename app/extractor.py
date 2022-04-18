@@ -2,7 +2,7 @@ from pathlib import Path
 from json import load as jsonload
 from uuid import uuid4 as makeUUID
 from yt_dlp import YoutubeDL as Extractinator
-import schemas
+import app.schemas as schemas
 
 extractDir = Path('./extractions')
 if not extractDir.exists():
