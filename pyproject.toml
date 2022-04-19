@@ -11,6 +11,7 @@ uvicorn = "0.17.6"
 SQLAlchemy = "^1.4.35"
 alembic = "^1.7.7"
 yt-dlp = "^2022.4.8"
+python-multipart = "^0.0.5"
 
 [tool.poetry.dev-dependencies]
 fastapi-profiler = "^1.0.0"
