@@ -76,14 +76,6 @@ class Song(SongBase):
         orm_mode = True
 
 
-# class PlaylistSongGetter(GetterDict):
-#     def get(self, key: str, default = None) -> Any:
-#         if key in ['dateadded']:
-#             return getattr(self._obj.song, key)
-#         else:
-#             return super().get(key, default)
-
-
 class PlaylistSong(SongBase):
     dateadded: datetime
     playlists: list[SongPlaylist]
@@ -118,7 +110,7 @@ class ShallowPlaylist(PlaylistBase):
 
 
 class PlaylistIn(BaseModel):
-    title: str | None
+    title: str
     songs: list[int] | None
 
 

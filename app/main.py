@@ -69,14 +69,31 @@ async def getPlaylist(playlistid: int, db: Session = Depends(getdb)):
 async def putPlaylist(playlistid: int, newplaylist: schemas.PlaylistIn, db: Session = Depends(getdb)):
     playlistmodel: models.Playlist = db.query(models.Playlist).get(playlistid)
 
-    if newplaylist.title is not None:
-        playlistmodel.title = newplaylist.title
+    playlistmodel.title = newplaylist.title
 
     if newplaylist.songs is not None:
         playlistmodel.songs = db.query(models.Song).filter(models.Song.id in newplaylist.songs).all()
 
     db.commit()
     return playlistmodel
+
+
+@app.post('/playlist', response_model=schemas.Playlist)
+async def postPlaylist(playlist: schemas.PlaylistIn, db: Session = Depends(getdb)):
+    if db.query(models.Playlist).filter_by(title=playlist.title).first() is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Playlist with title {playlist.title} already exists.")
+
+    if playlist.songs is None:
+        playlist.songs = []
+
+    newPlaylist = models.Playlist(
+        title=playlist.title,
+        songs=db.query(models.Song).filter(models.Song.id in playlist.songs)
+    )
+
+    db.add(newPlaylist)
+    db.commit()
+    return newPlaylist
 
 
 @app.get('/song/{songid}', response_model=schemas.Song)
