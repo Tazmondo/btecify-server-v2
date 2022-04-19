@@ -151,7 +151,7 @@ print("http://127.0.0.1:8000/docs")
 
 if __name__ == "__main__":
     print("main")
-    db: Session = SessionLocal()
-    testplaylist = db.query(models.Playlist).filter(models.Playlist.title == "eternal raijin").first()
+    testdb: Session = SessionLocal()
+    testplaylist = testdb.query(models.Playlist).filter(models.Playlist.title == "eternal raijin").first()
 
     print(schemas.Playlist.from_orm(testplaylist))
