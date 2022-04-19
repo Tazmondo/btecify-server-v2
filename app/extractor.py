@@ -25,9 +25,15 @@ def readData(file: Path) -> bytes:
     return filedata
 
 
-def download(options, url):
+def extract(options, url):
     with Extractinator(options) as downloader:
         info = downloader.extract_info(url)
+    return info
+
+
+def extractInfo(options, url):
+    with Extractinator(options) as downloader:
+        info = downloader.extract_info(url, download=False)
     return info
 
 
@@ -46,7 +52,7 @@ async def downloadSong(url: str) -> schemas.SongDownload:
         "logger": locallogger
     }
 
-    info = await loop.run_in_executor(None, download, options, url)
+    info = await loop.run_in_executor(None, extract, options, url)
 
     file = Path(info['requested_downloads'][0]['filepath'])
     thumbfile = Path(info['thumbnails'][-1]['filepath'])
@@ -79,25 +85,61 @@ async def downloadSong(url: str) -> schemas.SongDownload:
 
 
 # Perhaps take a progress callback parameter, so progress can be updated as it downloads large playlists.
-def downloadPlaylist(url: str) -> schemas.PlaylistDownload:
-    uuid = makeUUID()
+async def downloadPlaylist(url: str) -> schemas.PlaylistDownload:
+    uuid = str(makeUUID())
+
+    options = {
+        "format": "worstaudio",
+        "quiet": True,
+        "no_warnings": True,
+        "logger": locallogger
+    }
 
     pass
 
 
 if __name__ == "__main__":
+    options = {
+        "format": "worstaudio",
+    }
+
     testurlregvideo = "youtube.com/watch?v=cxFFhUvlRiM"
     testurlmusicvideo = "https://www.youtube.com/watch?v=T5-faDLv1Vs"
-    testurl3 = "https://abductedbysharks.bandcamp.com/track/hammerhead"
+    testurlbandcamp = "https://abductedbysharks.bandcamp.com/track/hammerhead"
 
+    testurlytplaylist = "https://www.youtube.com/playlist?list=PL22baOOM5dLdXrvuaxtquOQnnzB8mW6JB"
+    testurlytalbum = "https://www.youtube.com/playlist?list=OLAK5uy_nafOyxSwDvUta0pkBIkQfpUV6qKZ1jQaw"
+
+    # Same as regular album
+    testurlytmusicalbum = "https://music.youtube.com/playlist?list=OLAK5uy_nafOyxSwDvUta0pkBIkQfpUV6qKZ1jQaw"
+
+    testurlbandcampalbum = "https://abductedbysharks.bandcamp.com/album/abducted-by-sharks"
+    testurlbandcampallalbums = "https://abductedbysharks.bandcamp.com/"
+
+    # extractInfo(options, testurlbandcampalbum)
+
+    print("done")
+
+
+    # async def start():
+    #     x = await downloadSong(testurlmusicvideo)
+    #     print(x)
 
     async def start():
-        x = await downloadSong(testurlmusicvideo)
-        print(x)
+        loop = asyncio.get_event_loop()
+
+        results = await asyncio.gather(
+            *[loop.run_in_executor(None, extractInfo, options, url)
+              for url in
+              [testurlytalbum, testurlytmusicalbum, testurlbandcampalbum]
+              ],
+            return_exceptions=True
+        )
+
+        print("done")
 
 
     asyncio.run(start())
-    pass
 
 
 """
