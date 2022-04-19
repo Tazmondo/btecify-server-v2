@@ -1,4 +1,5 @@
 import io
+from os import environ
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -11,6 +12,11 @@ import app.schemas as schemas
 from app.db import SessionLocal
 
 app = FastAPI()
+
+if environ.get('devmode'):
+    from fastapi_profiler.profiler_middleware import PyInstrumentProfilerMiddleware
+
+    app.add_middleware(PyInstrumentProfilerMiddleware)
 
 
 # Dependency
