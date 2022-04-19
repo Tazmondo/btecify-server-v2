@@ -107,9 +107,18 @@ async def getPlaylist(playlistid: int, db: Session = Depends(getdb)):
     return db.query(models.Playlist).get(playlistid)
 
 
-@app.get('/song/{songid}', response_model=schemas.Song)
-async def getSong(songid: int, db: Session = Depends(getdb)):
-    return db.query(models.Song).get(songid)
+@app.put('/playlist/{playlistid}', response_model=schemas.Playlist)
+async def putPlaylist(playlistid: int, newplaylist: schemas.PlaylistIn, db: Session = Depends(getdb)):
+    playlistmodel: models.Playlist = db.query(models.Playlist).get(playlistid)
+
+    if newplaylist.title is not None:
+        playlistmodel.title = newplaylist.title
+
+    if newplaylist.songs is not None:
+        playlistmodel.songs = db.query(models.Song).filter(models.Song.id in newplaylist.songs).all()
+
+    db.commit()
+    return playlistmodel
 
 
 @app.post('/song', response_model=schemas.Song)
@@ -119,6 +128,11 @@ async def postSong(song: schemas.SongIn, playlists: list[int], db: Session = Dep
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not download song...")
 
     return song
+
+
+@app.get('/song/{songid}', response_model=schemas.Song)
+async def getSong(songid: int, db: Session = Depends(getdb)):
+    return db.query(models.Song).get(songid)
 
 
 @app.post('/fullsync')

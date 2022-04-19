@@ -101,8 +101,8 @@ class Playlist(PlaylistBase):
 
 
 class PlaylistIn(BaseModel):
-    title: str
-    songs: list[Song]
+    title: str | None
+    songs: list[int] | None
 
 
 class SongIn(BaseModel):
