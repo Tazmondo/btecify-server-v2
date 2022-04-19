@@ -1,5 +1,6 @@
 import io
 from os import environ
+from typing import Union
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -97,9 +98,15 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
     return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{dbsong.thumbnailext}")
 
 
-@app.get('/playlists', response_model=list[schemas.Playlist])
-async def getPlaylists(db=Depends(getdb)):
-    return db.query(models.Playlist).all()
+@app.get('/playlists', response_model=Union[list[schemas.ShallowPlaylist], list[schemas.Playlist]])
+async def getPlaylists(shallow: bool = True, db=Depends(getdb)):
+    playlistModels: list[models.Playlist] = db.query(models.Playlist).all()
+    if shallow:
+        response = [schemas.ShallowPlaylist.from_orm(x) for x in playlistModels]
+    else:
+        response = [schemas.Playlist.from_orm(x) for x in playlistModels]
+
+    return response
 
 
 @app.get('/playlist/{playlistid}', response_model=schemas.Playlist)

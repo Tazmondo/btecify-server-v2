@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+from typing import Union
 
 from sqlalchemy.orm import Session
 from yt_dlp.utils import DownloadError
@@ -9,7 +10,7 @@ import app.schemas as schemas
 from app.extractor import downloadSong
 
 
-async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> models.Song | False:
+async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Union[models.Song, bool]:
     playlistModels = db.query(models.Playlist).filter(models.Playlist.id in playlists).all()
 
     songDownload: schemas.SongDownload = await downloadSong(song.weburl)

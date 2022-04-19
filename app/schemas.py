@@ -6,10 +6,10 @@ from pydantic.utils import GetterDict
 
 
 # To resolve the association table when converting many-to-many into a schema.
-def getterMaker(keys: list[str], proxiedObjectName: str):
+def getterMaker(keysInAssociation: list[str], proxiedObjectName: str):
     class NewGetter(GetterDict):
         def get(self, key: str, default=None) -> Any:
-            if key not in keys:
+            if key not in keysInAssociation:
                 return getattr(getattr(self._obj, proxiedObjectName), key)
             else:
                 return super().get(key, default)
@@ -98,6 +98,23 @@ class Playlist(PlaylistBase):
 
     class Config:
         orm_mode = True
+
+
+# So that only the song id is fetched, instead of every detail about the song
+class ShallowPlaylistGetter(GetterDict):
+    def get(self, key: str, default=None) -> Any:
+        if key == 'songs':
+            return [getattr(playlistsong, "song_id") for playlistsong in self._obj.songs]
+        else:
+            return super().get(key, default)
+
+
+class ShallowPlaylist(PlaylistBase):
+    songs: list[int]
+
+    class Config:
+        orm_mode = True
+        getter_dict = ShallowPlaylistGetter
 
 
 class PlaylistIn(BaseModel):
