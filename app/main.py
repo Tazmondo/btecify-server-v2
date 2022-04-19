@@ -112,6 +112,15 @@ async def getSong(songid: int, db: Session = Depends(getdb)):
     return db.query(models.Song).get(songid)
 
 
+@app.post('/song', response_model=schemas.Song)
+async def postSong(song: schemas.SongIn, playlists: list[int], db: Session = Depends(getdb)):
+    song = await crud.addSong(song, playlists, db)
+    if not song:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not download song...")
+
+    return song
+
+
 @app.post('/fullsync')
 async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
     crud.fullSync(syncdata, db)

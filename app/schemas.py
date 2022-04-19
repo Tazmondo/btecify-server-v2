@@ -105,6 +105,13 @@ class PlaylistIn(BaseModel):
     songs: list[Song]
 
 
+class SongIn(BaseModel):
+    weburl: str
+    title: str | None
+    album: str | None
+    artist: str | None
+
+
 class FullSync(BaseModel):
     playlists: list[PlaylistIn]
 

@@ -9,8 +9,61 @@ import app.schemas as schemas
 from app.extractor import downloadSong
 
 
-def addSong(song: schemas.Song):
-    data = downloadSong(song.weburl)
+async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> models.Song | False:
+    playlistModels = db.query(models.Playlist).filter(models.Playlist.id in playlists).all()
+
+    songDownload: schemas.SongDownload = await downloadSong(song.weburl)
+    if songDownload.data is None:
+        return False
+
+    meta = songDownload.info
+
+    artist = song.artist or meta.get('artist') or meta.get('uploader') or None
+    album = song.album or meta.get('album') or None
+
+    artistModel = db \
+        .query(models.Artist) \
+        .filter(models.Artist.title == artist) \
+        .first()
+
+    if artist and not artistModel:
+        artistModel = models.Artist(
+            title=artist
+        )
+
+    albumModel = db \
+        .query(models.Album) \
+        .filter(models.Album.title == album) \
+        .first()
+
+    if album and not albumModel:
+        albumModel = models.Album(
+            title=album,
+            artist=artistModel
+        )
+
+    try:
+        songModel = models.Song(
+            weburl=meta.get('webpage_url') or song.weburl,
+            title=song.title or meta.get('track') or meta['title'],
+            duration=meta['duration'],
+            artist=artistModel or None,
+            album=albumModel or None,
+            playlists=playlistModels,
+            data=songDownload.data,
+            dataext=songDownload.dataext,
+            thumbnail=songDownload.thumbdata,
+            thumbnailext=songDownload.thumbext,
+            thumburl=meta.get('thumbnail')
+        )
+    except KeyError as e:
+        print(e)
+        return False
+
+    db.add(songModel)
+    db.commit()
+
+    return songModel
 
 
 async def dbDownloadSong(db: Session, song: models.Song, force: bool = False):

@@ -86,14 +86,13 @@ def downloadPlaylist(url: str) -> schemas.PlaylistDownload:
 
 
 if __name__ == "__main__":
-    testurl = "youtube.com/watch?v=cxFFhUvlRiM"
-    testurl1 = "https://www.youtube.com/playlist?list=PL22baOOM5dLdXrvuaxtquOQnnzB8mW6JB"
-    testurl2 = "https://abductedbysharks.bandcamp.com/album/hammerhead"
+    testurlregvideo = "youtube.com/watch?v=cxFFhUvlRiM"
+    testurlmusicvideo = "https://www.youtube.com/watch?v=T5-faDLv1Vs"
     testurl3 = "https://abductedbysharks.bandcamp.com/track/hammerhead"
 
 
     async def start():
-        x = await downloadSong(testurl)
+        x = await downloadSong(testurlmusicvideo)
         print(x)
 
 
