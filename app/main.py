@@ -49,55 +49,6 @@ getSongResponses = {
 }
 
 
-@app.get('/src/{songid}', responses={
-    200: {
-        "content": {"audio/{requested data extension}": {}},
-        "description": "Stream back the requested song",
-    },
-    469: {
-        "model": schemas.ExceptionResponse,
-        "description": "Could not download"
-    },
-    **getSongResponses
-})
-async def getSongSource(songid: int, db: Session = Depends(getdb)):
-    dbsong = getSong(songid, db)
-    if dbsong.disabled:
-        raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
-
-    if not dbsong.data:
-        try:
-            await crud.getSongSource(dbsong, db)
-        except DownloadError as e:
-            raise HTTPException(469, "Could not download", e)
-
-    return StreamingResponse(io.BytesIO(dbsong.data), media_type=f"audio/{dbsong.dataext}")
-
-
-@app.get('/thumb/{songid}', responses={
-    200: {
-        "content": {"image": {}},
-        "description": "Stream back the requested thumbnail",
-    },
-    469: {
-        "model": schemas.ExceptionResponse,
-        "description": "Could not download"
-    },
-    **getSongResponses
-})
-async def getSongThumb(songid: int, db: Session = Depends(getdb)):
-    dbsong = getSong(songid, db)
-    if dbsong.disabled:
-        raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
-
-    if not dbsong.thumbnail:
-        result = await crud.getSongThumb(dbsong, db)
-        if not result:
-            raise HTTPException(469, "Could not download")
-
-    return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{dbsong.thumbnailext}")
-
-
 @app.get('/playlist', response_model=Union[list[schemas.ShallowPlaylist], list[schemas.Playlist]])
 async def getPlaylists(shallow: bool = True, db=Depends(getdb)):
     playlistModels: list[models.Playlist] = db.query(models.Playlist).all()
@@ -128,6 +79,60 @@ async def putPlaylist(playlistid: int, newplaylist: schemas.PlaylistIn, db: Sess
     return playlistmodel
 
 
+@app.get('/song/{songid}', response_model=schemas.Song)
+async def getSong(songid: int, db: Session = Depends(getdb)):
+    return db.query(models.Song).get(songid)
+
+
+@app.get('/song/{songid}/src', responses={
+    200: {
+        "content": {"audio/{requested data extension}": {}},
+        "description": "Stream back the requested song",
+    },
+    469: {
+        "model": schemas.ExceptionResponse,
+        "description": "Could not download"
+    },
+    **getSongResponses
+})
+async def getSongSource(songid: int, db: Session = Depends(getdb)):
+    dbsong = getSong(songid, db)
+    if dbsong.disabled:
+        raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
+
+    if not dbsong.data:
+        try:
+            await crud.getSongSource(dbsong, db)
+        except DownloadError as e:
+            raise HTTPException(469, "Could not download", e)
+
+    return StreamingResponse(io.BytesIO(dbsong.data), media_type=f"audio/{dbsong.dataext}")
+
+
+@app.get('/song/{songid}/thumb', responses={
+    200: {
+        "content": {"image": {}},
+        "description": "Stream back the requested thumbnail",
+    },
+    469: {
+        "model": schemas.ExceptionResponse,
+        "description": "Could not download"
+    },
+    **getSongResponses
+})
+async def getSongThumb(songid: int, db: Session = Depends(getdb)):
+    dbsong = getSong(songid, db)
+    if dbsong.disabled:
+        raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
+
+    if not dbsong.thumbnail:
+        result = await crud.getSongThumb(dbsong, db)
+        if not result:
+            raise HTTPException(469, "Could not download")
+
+    return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{dbsong.thumbnailext}")
+
+
 @app.post('/song', response_model=schemas.Song)
 async def postSong(song: schemas.SongIn, playlists: list[int], db: Session = Depends(getdb)):
     song = await crud.addSong(song, playlists, db)
@@ -135,11 +140,6 @@ async def postSong(song: schemas.SongIn, playlists: list[int], db: Session = Dep
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not download song...")
 
     return song
-
-
-@app.get('/song/{songid}', response_model=schemas.Song)
-async def getSong(songid: int, db: Session = Depends(getdb)):
-    return db.query(models.Song).get(songid)
 
 
 @app.post('/fullsync')
