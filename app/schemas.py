@@ -86,6 +86,7 @@ class Song(SongBase):
 
 class PlaylistSong(SongBase):
     dateadded: datetime
+    playlists: list[SongPlaylist]
 
     class Config:
         orm_mode = True
