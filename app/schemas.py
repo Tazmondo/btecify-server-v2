@@ -112,9 +112,24 @@ class SongIn(BaseModel):
     artist: str | None
 
 
-class FullSync(BaseModel):
-    playlists: list[PlaylistIn]
-
-
 class ExceptionResponse(BaseModel):
     detail: str
+
+
+class SongFullSync(BaseModel):
+    title: str
+    album: str | None
+    duration: float
+    extractor: str
+    weburl: str | None
+    thumburl: str | None
+    artist: str
+
+
+class PlaylistFullSync(BaseModel):
+    title: str
+    songs: list[SongFullSync]
+
+
+class FullSync(BaseModel):
+    playlists: list[PlaylistFullSync]
