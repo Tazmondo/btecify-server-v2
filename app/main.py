@@ -98,7 +98,7 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
     return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{dbsong.thumbnailext}")
 
 
-@app.get('/playlists', response_model=Union[list[schemas.ShallowPlaylist], list[schemas.Playlist]])
+@app.get('/playlist', response_model=Union[list[schemas.ShallowPlaylist], list[schemas.Playlist]])
 async def getPlaylists(shallow: bool = True, db=Depends(getdb)):
     playlistModels: list[models.Playlist] = db.query(models.Playlist).all()
     if shallow:
