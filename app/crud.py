@@ -115,6 +115,7 @@ async def fetchSong(song: models.Song, force: bool = False):
             song.thumbnailext = songdownload.thumbext
 
             song.disabled = False
+            print(f"Fetched {song.title} : {song.weburl}")
         except DownloadError as e:
             if "video" in e.msg.lower():
                 print(f"\n\nDISABLING {song.title}, COULD BE UNAVAILABLE.\n{e.msg}\n")

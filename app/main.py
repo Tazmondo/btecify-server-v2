@@ -15,9 +15,9 @@ from app.db import SessionLocal
 app = FastAPI()
 
 if environ.get('devmode'):
-    from fastapi_profiler.profiler_middleware import PyInstrumentProfilerMiddleware
+    pass
 
-    app.add_middleware(PyInstrumentProfilerMiddleware)
+    # app.add_middleware(PyInstrumentProfilerMiddleware)
 
 
 # Dependency
@@ -29,7 +29,7 @@ def getdb():
         db.close()
 
 
-def getSong(songid: int, db: Session):
+def getSongFromDb(songid: int, db: Session):
     dbsong: models.Song = db.query(models.Song).get(songid)
     if not dbsong:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Song not found")
@@ -113,7 +113,7 @@ async def getSong(songid: int, db: Session = Depends(getdb)):
     **getSongResponses
 })
 async def getSongSource(songid: int, db: Session = Depends(getdb)):
-    dbsong = getSong(songid, db)
+    dbsong = getSongFromDb(songid, db)
     if dbsong.disabled:
         raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
 
@@ -138,7 +138,7 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
     **getSongResponses
 })
 async def getSongThumb(songid: int, db: Session = Depends(getdb)):
-    dbsong = getSong(songid, db)
+    dbsong = getSongFromDb(songid, db)
     if dbsong.disabled:
         raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
 
@@ -162,6 +162,15 @@ async def postSong(song: schemas.SongIn, playlists: list[int], db: Session = Dep
 @app.post('/fullsync')
 async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
     crud.fullSync(syncdata, db)
+
+
+@app.post('/fulldownload', response_model=list[schemas.Song])
+async def fullDownload(db: Session = Depends(getdb)):
+    allSongs = db.query(models.Song).all()
+    failures = await crud.fetchSongs(allSongs)
+    db.commit()
+
+    return failures
 
 
 print("http://127.0.0.1:8000/docs")
