@@ -39,7 +39,7 @@ class Song(Base):
     album_id = Column(Integer, ForeignKey("album.id"), nullable=True)
     album = relationship('Album', back_populates="songs")
 
-    playlists = relationship('PlaylistSong',  back_populates='song')
+    playlists = relationship('PlaylistSong', back_populates='song')
 
 
 class Album(Base):

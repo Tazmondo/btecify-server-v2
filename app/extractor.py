@@ -68,7 +68,6 @@ async def downloadSong(url: str) -> schemas.SongDownload:
     except FileNotFoundError:
         filedata = None
 
-
     try:  # Read music data
         thumbdata = readData(thumbfile)
         pass
@@ -140,7 +139,6 @@ if __name__ == "__main__":
 
 
     asyncio.run(start())
-
 
 """
 Available options:

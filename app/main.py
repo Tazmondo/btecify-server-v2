@@ -37,15 +37,14 @@ def getSongFromDb(songid: int, db: Session):
 
 
 getSongResponses = {
-    404:
-        {
-            "model": schemas.ExceptionResponse,
-            "description": "Requested song couldn't be found."
-        },
+    404: {
+        "model": schemas.ExceptionResponse,
+        "description": "Requested song couldn't be found."
+    },
     410: {
         "model": schemas.ExceptionResponse,
         "description": "Song is disabled due to lack of a source"
-    }
+    },
 }
 
 
