@@ -48,6 +48,11 @@ getSongResponses = {
 }
 
 
+@app.get('/ping')
+async def pong():
+    return {'ping': 'pong'}
+
+
 @app.get('/playlist', response_model=Union[list[schemas.ShallowPlaylist], list[schemas.Playlist]])
 async def getPlaylists(shallow: bool = True, db=Depends(getdb)):
     playlistModels: list[models.Playlist] = db.query(models.Playlist).all()
