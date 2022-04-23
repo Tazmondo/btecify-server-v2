@@ -110,14 +110,24 @@ async def postPlaylist(playlist: schemas.PlaylistIn, db: Session = Depends(getdb
     if playlist.songs is None:
         playlist.songs = []
 
+    found_songs = db.query(models.Song).filter(models.Song.id.in_(playlist.songs)).all()
+
     newPlaylist = models.Playlist(
         title=playlist.title,
-        songs=db.query(models.Song).filter(models.Song.id in playlist.songs)
     )
+
+    newPlaylist.songs = [models.PlaylistSong(
+        song=song,
+        playlist=newPlaylist,
+        dateadded=datetime.now()
+    ) for song in found_songs]
 
     db.add(newPlaylist)
     db.commit()
     return newPlaylist
+
+
+# todo: delete playlist
 
 
 @app.get('/song/{songid}', response_model=schemas.Song)

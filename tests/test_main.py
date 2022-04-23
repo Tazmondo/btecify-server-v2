@@ -73,3 +73,23 @@ def test_put_playlist():
     # Basically just check if all the songs provided in updatetitle were actually added to the returned playlist
     # assert all(map(lambda songid: songid in map(lambda playlistsong: playlistsong['id'], data['songs']), updateTitle['songs']))
     assert all(map(lambda playlistsong: playlistsong['id'] in updateTitle['songs'], data['songs']))
+
+
+def test_post_playlist():
+    make_test_db()
+    newplaylist = {'title': "new test playlist", "songs": [2]}
+    response = client.post('/playlist', json=newplaylist)
+    assert response.status_code == 200
+    data = response.json()
+    assert data['title'] == newplaylist['title']
+    assert all(map(lambda playlistsong: playlistsong['id'] in newplaylist['songs'], data['songs']))
+
+    response = client.post('/playlist', json=newplaylist)
+    assert response.status_code == 409
+
+    make_test_db()
+    newplaylist = {'title': "new test playlist", "songs": []}
+    response = client.post('/playlist', json=newplaylist)
+    assert response.status_code == 200
+    data = response.json()
+    assert data == {'title': 'new test playlist', 'songs': [], 'id': 3}
