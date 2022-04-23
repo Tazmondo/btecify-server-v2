@@ -66,7 +66,10 @@ async def getPlaylists(shallow: bool = True, db=Depends(getdb)):
 
 @app.get('/playlist/{playlistid}', response_model=schemas.Playlist)
 async def getPlaylist(playlistid: int, db: Session = Depends(getdb)):
-    return db.query(models.Playlist).get(playlistid)
+    playlist = db.query(models.Playlist).get(playlistid)
+    if playlist is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Requested playlist does not exist.")
+    return playlist
 
 
 @app.put('/playlist/{playlistid}', response_model=schemas.Playlist)
