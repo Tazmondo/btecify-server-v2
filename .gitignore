@@ -3,3 +3,4 @@ db
 extractions
 testing
 count-loc.py
+__pycache__

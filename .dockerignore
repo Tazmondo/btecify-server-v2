@@ -4,3 +4,10 @@ extractions
 testing
 count-loc.py
 tests
+Dockerfile
+README.md
+__pycache__
+.dockerignore
+.gitignore
+.git
+build-image.bat
