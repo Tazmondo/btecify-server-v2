@@ -68,7 +68,7 @@ class Playlist(Base):
     title = Column(String, nullable=False)
     thumbnail = Column(LargeBinary, nullable=True)
 
-    songs = relationship('PlaylistSong', back_populates='playlist')
+    songs = relationship('PlaylistSong', back_populates='playlist', cascade="all, delete, delete-orphan")
 
 
 class User(Base):

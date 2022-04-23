@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 from os import environ
 from typing import Union
 
@@ -10,9 +11,11 @@ from yt_dlp.utils import DownloadError
 import app.crud as crud
 import app.models as models
 import app.schemas as schemas
-from app.db import SessionLocal
+from app.db import SessionLocal, engine
+from app.models import Base
 
 app = FastAPI()
+Base.metadata.create_all(bind=engine)
 
 if environ.get('devmode'):
     pass
@@ -75,11 +78,21 @@ async def getPlaylist(playlistid: int, db: Session = Depends(getdb)):
 @app.put('/playlist/{playlistid}', response_model=schemas.Playlist)
 async def putPlaylist(playlistid: int, newplaylist: schemas.PlaylistIn, db: Session = Depends(getdb)):
     playlistmodel: models.Playlist = db.query(models.Playlist).get(playlistid)
+    if playlistmodel is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Requested playlist does not exist.")
 
-    playlistmodel.title = newplaylist.title
+    if playlistmodel.title is not None:
+        playlistmodel.title = newplaylist.title
 
     if newplaylist.songs is not None:
-        playlistmodel.songs = db.query(models.Song).filter(models.Song.id in newplaylist.songs).all()
+        newsongs = db.query(models.Song).filter(models.Song.id.in_(newplaylist.songs)).all()
+        playlistmodel.songs = [
+            models.PlaylistSong(
+                playlist=playlistmodel,
+                song=song,
+                dateadded=datetime.now()
+            ) for song in newsongs
+        ]
 
     db.commit()
     return playlistmodel
