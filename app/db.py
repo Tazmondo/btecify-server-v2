@@ -11,7 +11,7 @@ if environ.get('testdb'):
 
 if Path(getcwd()).name == 'btecify-server':
     SQLALCHEMY_DATABASE_URL = "sqlite:///./db/" + dbname
-elif Path(getcwd()).name == "app":
+elif Path(getcwd()).name == "app" or Path(getcwd()).name == "tests":
     SQLALCHEMY_DATABASE_URL = "sqlite:///../db/" + dbname
 else:
     raise Exception(f"Unknown path: ", getcwd())
