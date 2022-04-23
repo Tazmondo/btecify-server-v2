@@ -38,3 +38,38 @@ def test_get_playlist():
     assert response.status_code == 404
     assert response.json() == {'detail': 'Requested playlist does not exist.'}
     print("")
+
+
+def test_put_playlist():
+    make_test_db()
+    response = client.put('/playlist/1')
+    assert response.status_code == 422
+
+    response = client.put('/playlist/10000', json={'title': 'a valid title'})
+    assert response.status_code == 404
+
+    response = client.put('/playlist/1', json={'title': 'valid', 'songs': [1, 2, 3, 4, 5, 43, 5, 43]})
+    assert response.status_code == 404
+
+    # Individual title
+    updateTitle = {'title': 'updated title'}
+
+    response = client.put('/playlist/1', json=updateTitle)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data['title'] == "updated title"
+
+    # Both together
+    make_test_db()
+    updateTitle = {'title': 'updated title', 'songs': [2, 3]}
+
+    response = client.put('/playlist/1', json=updateTitle)
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data['title'] == "updated title"
+
+    # Basically just check if all the songs provided in updatetitle were actually added to the returned playlist
+    # assert all(map(lambda songid: songid in map(lambda playlistsong: playlistsong['id'], data['songs']), updateTitle['songs']))
+    assert all(map(lambda playlistsong: playlistsong['id'] in updateTitle['songs'], data['songs']))

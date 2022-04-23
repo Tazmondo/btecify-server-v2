@@ -86,6 +86,10 @@ async def putPlaylist(playlistid: int, newplaylist: schemas.PlaylistIn, db: Sess
 
     if newplaylist.songs is not None:
         newsongs = db.query(models.Song).filter(models.Song.id.in_(newplaylist.songs)).all()
+
+        if len(newsongs) != len(newplaylist.songs):  # All inputted songs should be valid.
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Requested songs not found.")
+
         playlistmodel.songs = [
             models.PlaylistSong(
                 playlist=playlistmodel,
