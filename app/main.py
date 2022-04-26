@@ -18,9 +18,9 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 if environ.get('devmode'):
-    pass
+    from fastapi_profiler.profiler_middleware import PyInstrumentProfilerMiddleware
 
-    # app.add_middleware(PyInstrumentProfilerMiddleware)
+    app.add_middleware(PyInstrumentProfilerMiddleware)
 
 
 # Dependency
