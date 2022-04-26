@@ -181,7 +181,11 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
         if not result:
             raise HTTPException(469, "Could not download")
 
-    return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{dbsong.thumbnailext}")
+    ext = dbsong.thumbnailext
+    if ext.startswith('.'):  # Because some extensions in db might start with .
+        ext = ext[1:]
+
+    return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{ext}")
 
 
 @app.post('/song', response_model=schemas.Song)

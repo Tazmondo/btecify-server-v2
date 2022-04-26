@@ -78,7 +78,7 @@ async def downloadSong(url: str) -> schemas.SongDownload:
         data=filedata,
         dataext=info['ext'],
         thumbdata=thumbdata,
-        thumbext=Path(urlparse(info['thumbnail']).path).suffix,  # Get extension from web url
+        thumbext=Path(urlparse(info['thumbnail']).path).suffix[1:],  # Get extension from web url, with period removed
         info=info,
     )
 
