@@ -77,7 +77,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
 
 
 async def dbDownloadSong(db: Session, song: models.Song, force: bool = False):
-    song = await fetchSong(song, force)
+    song = await downloadExistingSong(song, force)
 
     db.commit()
     return song
@@ -105,12 +105,12 @@ async def dbDownloadAll(db: Session):
 
 async def fetchSongs(songs: list[models.Song], db: Session):
     # Fetch all songs concurrently
-    results = await asyncio.gather(*[fetchSong(song, db) for song in songs], return_exceptions=True)
+    results = await asyncio.gather(*[downloadExistingSong(song, db) for song in songs], return_exceptions=True)
     failures = list(filter(lambda a: a not in results, songs))
     return failures
 
 
-async def fetchSong(song: models.Song, db: Session, force: bool = False):
+async def downloadExistingSong(song: models.Song, db: Session, force: bool = False):
     if ((song.data is None or song.dataext is None) and not song.disabled) or force:
         print(f"Fetching... {song.title} : {song.weburl}")
         try:
