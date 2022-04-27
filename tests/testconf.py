@@ -39,7 +39,6 @@ def make_test_db():
         data=b'some sound bytes',
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=iSqnJPdyqFM",
-        thumburl="https://i.ytimg.com/vi/iSqnJPdyqFM/hqdefault.jpg",
         thumbnail=thumbnail
     )
     song2 = Song(
@@ -50,7 +49,6 @@ def make_test_db():
         data=b'some 2 sound bytes',
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=ggHN5ZJ8jkU",
-        thumburl="https://i.ytimg.com/vi/ggHN5ZJ8jkU/hqdefault.jpg",
         thumbnail=thumbnail
     )
     song3 = Song(
@@ -61,8 +59,11 @@ def make_test_db():
         data=b'some 3 sound bytes',
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=BbbcvFJ55F4",
-        thumburl="https://i.ytimg.com/vi/BbbcvFJ55F4/hqdefault.jpg",
         thumbnail=thumbnail
+    )
+    song4 = Song(
+        title="song4",
+        weburl="a bad url",
     )
 
     playlist1 = Playlist(
@@ -94,6 +95,11 @@ def make_test_db():
         song=song3,
         playlist=playlist2
     )
+    a5 = PlaylistSong(
+        dateadded=datetime(2022, 4, 26, 2, 40),
+        song=song4,
+        playlist=playlist1
+    )
 
     album1 = Album(
         title="album1",
@@ -101,7 +107,7 @@ def make_test_db():
     )
     album2 = Album(
         title="album2",
-        songs=[song1]
+        songs=[song1, song4]
     )
 
     artist1 = Artist(

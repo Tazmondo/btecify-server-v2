@@ -21,18 +21,16 @@ class Song(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
     duration = Column(Float, nullable=True)
-    extractor = Column(String, nullable=False)
 
     disabled = Column(Boolean, nullable=False, default=False)
 
+    extractor = Column(String, nullable=True)
     data = Column(LargeBinary, nullable=True)
     dataext = Column(String, nullable=True)
     weburl = Column(String, nullable=True, unique=True)
 
     thumb_hash = Column(String, ForeignKey('thumbnail.hash'), nullable=True)
     thumbnail = relationship("Thumbnail")
-
-    thumburl = Column(String, nullable=True)
 
     artist_id = Column(Integer, ForeignKey('artist.id'))
     artist = relationship("Artist", back_populates="songs")

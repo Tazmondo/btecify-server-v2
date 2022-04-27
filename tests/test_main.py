@@ -14,14 +14,15 @@ def test_get_playlists():
     response = client.get('/playlist')
     assert response.status_code == 200
     data = response.json()
-    assert repr(
-        data) == "[{'id': 1, 'title': 'playlist1', 'songs': [1, 2]}, {'id': 2, 'title': 'playlist2', 'songs': [3, 2]}]"
+    assert repr(data) == ("[{'id': 1, 'title': 'playlist1', 'songs': [1, 3, 2]}, {'id': 2, 'title': "
+                          "'playlist2', 'songs': [4, 3]}]")
 
     response = client.get('/playlist', params={'shallow': "False"})
     assert response.status_code == 200
     data = response.json()
     assert repr(
-        data) == "[{'id': 1, 'title': 'playlist1', 'songs': [{'id': 1, 'title': 'song1', 'album': {'id': 1, 'title': 'album2'}, 'duration': 50.3, 'extractor': 'youtube', 'weburl': 'https://www.youtube.com/watch?v=iSqnJPdyqFM', 'artist': {'id': 1, 'title': 'artist2'}, 'dateadded': '2022-04-23T02:40:00', 'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': '2022-04-23T02:40:00'}]}, {'id': 2, 'title': 'song2', 'album': {'id': 2, 'title': 'album1'}, 'duration': 22.3, 'extractor': 'bandcamp', 'weburl': 'https://www.youtube.com/watch?v=ggHN5ZJ8jkU', 'artist': {'id': 2, 'title': 'artist1'}, 'dateadded': '2022-04-24T02:40:00', 'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': '2022-04-24T02:40:00'}, {'id': 2, 'title': 'playlist2', 'dateadded': '2022-04-25T02:40:00'}]}]}, {'id': 2, 'title': 'playlist2', 'songs': [{'id': 3, 'title': 'song3', 'album': {'id': 2, 'title': 'album1'}, 'duration': 10.3, 'extractor': 'youtube', 'weburl': 'https://www.youtube.com/watch?v=BbbcvFJ55F4', 'artist': {'id': 2, 'title': 'artist1'}, 'dateadded': '2022-04-26T02:40:00', 'playlists': [{'id': 2, 'title': 'playlist2', 'dateadded': '2022-04-26T02:40:00'}]}, {'id': 2, 'title': 'song2', 'album': {'id': 2, 'title': 'album1'}, 'duration': 22.3, 'extractor': 'bandcamp', 'weburl': 'https://www.youtube.com/watch?v=ggHN5ZJ8jkU', 'artist': {'id': 2, 'title': 'artist1'}, 'dateadded': '2022-04-25T02:40:00', 'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': '2022-04-24T02:40:00'}, {'id': 2, 'title': 'playlist2', 'dateadded': '2022-04-25T02:40:00'}]}]}]"
+        data) == (
+               "[{'id': 1, 'title': 'playlist1', 'songs': [{'id': 1, 'title': 'song1', ""'album': {'id': 1, 'title': 'album2'}, 'duration': 50.3, 'extractor': ""'youtube', 'weburl': 'https://www.youtube.com/watch?v=iSqnJPdyqFM', ""'artist': {'id': 1, 'title': 'artist2'}, 'dateadded': '2022-04-23T02:40:00', ""'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': ""'2022-04-23T02:40:00'}]}, {'id': 3, 'title': 'song2', 'album': {'id': 2, ""'title': 'album1'}, 'duration': 22.3, 'extractor': 'bandcamp', 'weburl': ""'https://www.youtube.com/watch?v=ggHN5ZJ8jkU', 'artist': {'id': 2, 'title': ""'artist1'}, 'dateadded': '2022-04-24T02:40:00', 'playlists': [{'id': 1, ""'title': 'playlist1', 'dateadded': '2022-04-24T02:40:00'}, {'id': 2, ""'title': 'playlist2', 'dateadded': '2022-04-25T02:40:00'}]}, {'id': 2, ""'title': 'song4', 'album': {'id': 1, 'title': 'album2'}, 'duration': None, ""'extractor': None, 'weburl': 'a bad url', 'artist': {'id': 1, 'title': ""'artist2'}, 'dateadded': '2022-04-26T02:40:00', 'playlists': [{'id': 1, ""'title': 'playlist1', 'dateadded': '2022-04-26T02:40:00'}]}]}, {'id': 2, ""'title': 'playlist2', 'songs': [{'id': 4, 'title': 'song3', 'album': {'id': ""2, 'title': 'album1'}, 'duration': 10.3, 'extractor': 'youtube', 'weburl': ""'https://www.youtube.com/watch?v=BbbcvFJ55F4', 'artist': {'id': 2, 'title': ""'artist1'}, 'dateadded': '2022-04-26T02:40:00', 'playlists': [{'id': 2, ""'title': 'playlist2', 'dateadded': '2022-04-26T02:40:00'}]}, {'id': 3, ""'title': 'song2', 'album': {'id': 2, 'title': 'album1'}, 'duration': 22.3, ""'extractor': 'bandcamp', 'weburl': ""'https://www.youtube.com/watch?v=ggHN5ZJ8jkU', 'artist': {'id': 2, 'title': ""'artist1'}, 'dateadded': '2022-04-25T02:40:00', 'playlists': [{'id': 1, ""'title': 'playlist1', 'dateadded': '2022-04-24T02:40:00'}, {'id': 2, ""'title': 'playlist2', 'dateadded': '2022-04-25T02:40:00'}]}]}]")
 
     response = client.get('/playlist', params={'shallow': '100'})
     assert response.status_code == 422
@@ -32,7 +33,8 @@ def test_get_playlist():
     response = client.get('/playlist/1')
     assert response.status_code == 200
     assert repr(
-        response.json()) == "{'id': 1, 'title': 'playlist1', 'songs': [{'id': 1, 'title': 'song1', 'album': {'id': 1, 'title': 'album2'}, 'duration': 50.3, 'extractor': 'youtube', 'weburl': 'https://www.youtube.com/watch?v=iSqnJPdyqFM', 'artist': {'id': 1, 'title': 'artist2'}, 'dateadded': '2022-04-23T02:40:00', 'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': '2022-04-23T02:40:00'}]}, {'id': 2, 'title': 'song2', 'album': {'id': 2, 'title': 'album1'}, 'duration': 22.3, 'extractor': 'bandcamp', 'weburl': 'https://www.youtube.com/watch?v=ggHN5ZJ8jkU', 'artist': {'id': 2, 'title': 'artist1'}, 'dateadded': '2022-04-24T02:40:00', 'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': '2022-04-24T02:40:00'}, {'id': 2, 'title': 'playlist2', 'dateadded': '2022-04-25T02:40:00'}]}]}"
+        response.json()) == (
+               "{'id': 1, 'title': 'playlist1', 'songs': [{'id': 1, 'title': 'song1', ""'album': {'id': 1, 'title': 'album2'}, 'duration': 50.3, 'extractor': ""'youtube', 'weburl': 'https://www.youtube.com/watch?v=iSqnJPdyqFM', ""'artist': {'id': 1, 'title': 'artist2'}, 'dateadded': '2022-04-23T02:40:00', ""'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': ""'2022-04-23T02:40:00'}]}, {'id': 3, 'title': 'song2', 'album': {'id': 2, ""'title': 'album1'}, 'duration': 22.3, 'extractor': 'bandcamp', 'weburl': ""'https://www.youtube.com/watch?v=ggHN5ZJ8jkU', 'artist': {'id': 2, 'title': ""'artist1'}, 'dateadded': '2022-04-24T02:40:00', 'playlists': [{'id': 1, ""'title': 'playlist1', 'dateadded': '2022-04-24T02:40:00'}, {'id': 2, ""'title': 'playlist2', 'dateadded': '2022-04-25T02:40:00'}]}, {'id': 2, ""'title': 'song4', 'album': {'id': 1, 'title': 'album2'}, 'duration': None, ""'extractor': None, 'weburl': 'a bad url', 'artist': {'id': 1, 'title': ""'artist2'}, 'dateadded': '2022-04-26T02:40:00', 'playlists': [{'id': 1, ""'title': 'playlist1', 'dateadded': '2022-04-26T02:40:00'}]}]}")
 
     response = client.get('/playlist/10000')
     assert response.status_code == 404
@@ -93,3 +95,32 @@ def test_post_playlist():
     assert response.status_code == 200
     data = response.json()
     assert data == {'title': 'new test playlist', 'songs': [], 'id': 3}
+
+
+def test_get_song():
+    make_test_db()
+    response = client.get('/song/1')
+    assert (response.status_code == 200)
+    assert (repr(
+        response.json()) == "{'id': 1, 'title': 'song1', 'album': {'id': 1, 'title': 'album2'}, 'duration': 50.3, 'extractor': 'youtube', 'weburl': 'https://www.youtube.com/watch?v=iSqnJPdyqFM', 'artist': {'id': 1, 'title': 'artist2'}, 'playlists': [{'id': 1, 'title': 'playlist1', 'dateadded': '2022-04-23T02:40:00'}]}")
+
+    response = client.get('/song/21893712132')
+    assert (response.status_code == 404)
+    assert (response.json()['detail'] == "Requested song does not exist.")
+
+    response = client.get('/song/-1')
+    assert (response.status_code == 404)
+    assert (response.json()['detail'] == "Requested song does not exist.")
+
+
+def test_get_song_src():
+    make_test_db()
+    response = client.get('/song/3/src')
+    assert (response.status_code == 200)
+    assert (response.content == b'some 2 sound bytes')
+
+    response = client.get('/song/1/src')
+    assert (response.status_code == 410)
+
+    response = client.get('/song/2/src')
+    assert (response.status_code == 469)

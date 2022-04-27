@@ -60,6 +60,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
             artist=artistModel or None,
             album=albumModel or None,
             playlists=playlistModels,
+            extractor=meta['extractor_key'],
             data=songDownload.data,
             dataext=songDownload.dataext,
             thumbnail=thumbobj,
@@ -117,6 +118,7 @@ async def fetchSong(song: models.Song, db: Session, force: bool = False):
 
             song.data = songdownload.data
             song.dataext = songdownload.dataext
+            song.extractor = songdownload.extractor
 
             song.thumburl = songdownload.info['thumbnail']
 
@@ -218,7 +220,6 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
                     title=song.title,
                     duration=song.duration,
                     extractor=song.extractor,
-                    thumburl=song.thumburl,
                     weburl=song.weburl
                 )
 

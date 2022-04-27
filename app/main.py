@@ -132,7 +132,11 @@ async def postPlaylist(playlist: schemas.PlaylistIn, db: Session = Depends(getdb
 
 @app.get('/song/{songid}', response_model=schemas.Song)
 async def getSong(songid: int, db: Session = Depends(getdb)):
-    return db.query(models.Song).get(songid)
+    song = db.query(models.Song).get(songid)
+    if song is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Requested song does not exist.")
+
+    return song
 
 
 @app.get('/song/{songid}/src', responses={
@@ -155,7 +159,7 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
         try:
             await crud.getSongSource(dbsong, db)
         except DownloadError as e:
-            raise HTTPException(469, "Could not download", e)
+            raise HTTPException(469, "Could not download")
 
     return StreamingResponse(io.BytesIO(dbsong.data), media_type=f"audio/{dbsong.dataext}")
 

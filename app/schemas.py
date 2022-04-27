@@ -29,6 +29,7 @@ class SongDownload(BaseModel):
     thumbdata: bytes
     thumbext: str
     info: dict
+    extractor: str
 
 
 class PlaylistDownload:
@@ -61,8 +62,8 @@ class SongBase(BaseModel):
     id: int
     title: str
     album: Album | None
-    duration: float
-    extractor: str
+    duration: float | None
+    extractor: str | None
     weburl: str
     artist: Artist
 

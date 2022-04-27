@@ -80,6 +80,7 @@ async def downloadSong(url: str) -> schemas.SongDownload:
         thumbdata=thumbdata,
         thumbext=Path(urlparse(info['thumbnail']).path).suffix[1:],  # Get extension from web url, with period removed
         info=info,
+        extractor=info['extractor_key']
     )
 
 
