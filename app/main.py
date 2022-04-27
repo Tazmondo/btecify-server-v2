@@ -184,12 +184,14 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
         result = await crud.getSongThumb(dbsong, db)
         if not result:
             raise HTTPException(469, "Could not download")
-
-    ext = dbsong.thumbnailext
+    thumbnail = dbsong.thumbnail
+    ext = thumbnail.ext
     if ext.startswith('.'):  # Because some extensions in db might start with .
         ext = ext[1:]
+        thumbnail.ext = ext
+        db.commit()
 
-    return StreamingResponse(io.BytesIO(dbsong.thumbnail), media_type=f"image/{ext}")
+    return StreamingResponse(io.BytesIO(thumbnail.data), media_type=f"image/{ext}")
 
 
 @app.post('/song', response_model=schemas.Song)

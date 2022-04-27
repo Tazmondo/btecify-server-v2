@@ -124,3 +124,17 @@ def test_get_song_src():
 
     response = client.get('/song/2/src')
     assert (response.status_code == 469)
+
+
+def test_get_song_thumb():
+    make_test_db()
+    response = client.get('/song/3/thumb')
+    assert (response.status_code == 200)
+    assert (response.content == b'some image bytes')
+    assert (response.headers['content-type'] == 'image/png')
+
+    response = client.get('/song/1/src')
+    assert (response.status_code == 410)
+
+    response = client.get('/song/2/src')
+    assert (response.status_code == 469)
