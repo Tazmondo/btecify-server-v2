@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 from app.main import app, getdb
-from app.models import Base, Song, Album, Artist, Playlist, PlaylistSong
+from app.models import Base, Song, Album, Artist, Playlist, PlaylistSong, Thumbnail
 
 DBNAME = "../db/test.db"
 
@@ -25,6 +25,12 @@ def make_test_db():
     # Make all tables
     Base.metadata.create_all(bind=engine)
 
+    thumbnail = Thumbnail(
+        hash="a hash",
+        data=b'some image bytes',
+        ext='png'
+    )
+
     song1 = Song(
         title="song1",
         duration=50.3,
@@ -33,9 +39,8 @@ def make_test_db():
         data=b'some sound bytes',
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=iSqnJPdyqFM",
-        thumbnail=b'some image bytes',
-        thumbnailext='png',
-        thumburl="https://i.ytimg.com/vi/iSqnJPdyqFM/hqdefault.jpg"
+        thumburl="https://i.ytimg.com/vi/iSqnJPdyqFM/hqdefault.jpg",
+        thumbnail=thumbnail
     )
     song2 = Song(
         title="song2",
@@ -45,9 +50,8 @@ def make_test_db():
         data=b'some 2 sound bytes',
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=ggHN5ZJ8jkU",
-        thumbnail=b'some 2 image bytes',
-        thumbnailext='png',
-        thumburl="https://i.ytimg.com/vi/ggHN5ZJ8jkU/hqdefault.jpg"
+        thumburl="https://i.ytimg.com/vi/ggHN5ZJ8jkU/hqdefault.jpg",
+        thumbnail=thumbnail
     )
     song3 = Song(
         title="song3",
@@ -57,9 +61,8 @@ def make_test_db():
         data=b'some 3 sound bytes',
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=BbbcvFJ55F4",
-        thumbnail=b'some 3 image bytes',
-        thumbnailext='png',
-        thumburl="https://i.ytimg.com/vi/BbbcvFJ55F4/hqdefault.jpg"
+        thumburl="https://i.ytimg.com/vi/BbbcvFJ55F4/hqdefault.jpg",
+        thumbnail=thumbnail
     )
 
     playlist1 = Playlist(

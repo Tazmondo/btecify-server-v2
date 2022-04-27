@@ -17,6 +17,12 @@ def getterMaker(keysInAssociation: list[str], proxiedObjectName: str):
     return NewGetter
 
 
+class Thumbnail(BaseModel):
+    hash: str
+    data: bytes
+    ext: str
+
+
 class SongDownload(BaseModel):
     data: bytes
     dataext: str
@@ -131,7 +137,6 @@ class SongFullSync(BaseModel):
     duration: float
     extractor: str
     weburl: str | None
-    thumburl: str | None
     artist: str
 
 

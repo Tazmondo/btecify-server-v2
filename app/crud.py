@@ -43,6 +43,15 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
             artist=artistModel
         )
 
+    thumbhash = md5(songDownload.thumbdata).hexdigest()
+    thumbobj = db.get(models.Thumbnail, thumbhash)
+    if thumbobj is None:
+        thumbobj = models.Thumbnail(
+            hash=thumbhash,
+            data=songDownload.thumbdata,
+            ext=songDownload.thumbext
+        )
+
     try:
         songModel = models.Song(
             weburl=meta.get('webpage_url') or song.weburl,
@@ -53,8 +62,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
             playlists=playlistModels,
             data=songDownload.data,
             dataext=songDownload.dataext,
-            thumbnail=songDownload.thumbdata,
-            thumbnailext=songDownload.thumbext,
+            thumbnail=thumbobj,
             thumburl=meta.get('thumbnail')
         )
     except KeyError as e:
@@ -80,7 +88,7 @@ async def dbDownloadPlaylist(db: Session, playlist: models.Playlist):
         .filter(models.PlaylistSong.playlist_id == playlist.id) \
         .all()
 
-    results = await fetchSongs(songs)
+    results = await fetchSongs(songs, db)
     db.commit()
     return results
 
@@ -88,20 +96,20 @@ async def dbDownloadPlaylist(db: Session, playlist: models.Playlist):
 async def dbDownloadAll(db: Session):
     songs: list[models.Song] = db.query(models.Song).all()
 
-    results = await fetchSongs(songs)
+    results = await fetchSongs(songs, db)
     db.commit()
 
     return results
 
 
-async def fetchSongs(songs: list[models.Song]):
+async def fetchSongs(songs: list[models.Song], db: Session):
     # Fetch all songs concurrently
-    results = await asyncio.gather(*[fetchSong(song) for song in songs], return_exceptions=True)
+    results = await asyncio.gather(*[fetchSong(song, db) for song in songs], return_exceptions=True)
     failures = list(filter(lambda a: a not in results, songs))
     return failures
 
 
-async def fetchSong(song: models.Song, force: bool = False):
+async def fetchSong(song: models.Song, db: Session, force: bool = False):
     if ((song.data is None or song.dataext is None) and not song.disabled) or force:
         print(f"Fetching... {song.title} : {song.weburl}")
         try:
@@ -111,8 +119,17 @@ async def fetchSong(song: models.Song, force: bool = False):
             song.dataext = songdownload.dataext
 
             song.thumburl = songdownload.info['thumbnail']
-            song.thumbnail = songdownload.thumbdata
-            song.thumbnailext = songdownload.thumbext
+
+            thumbhash = md5(songdownload.thumbdata).hexdigest()
+            thumbobj = db.get(models.Thumbnail, thumbhash)
+            if thumbobj:
+                song.thumbnail = thumbobj
+            else:
+                song.thumbnail = models.Thumbnail(
+                    hash=thumbhash,
+                    data=songdownload.thumbdata,
+                    ext=songdownload.thumbext
+                )
 
             song.disabled = False
             print(f"Fetched {song.title} : {song.weburl}")
@@ -243,41 +260,51 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
 
 if __name__ == "__main__":
     from app.db import SessionLocal
+    from hashlib import md5
 
     db: Session = SessionLocal()
 
-    fakeSong = models.Song(
-        title="test1",
-        duration=5,
-        extractor="testextractor",
-        weburl="bogusurl",
+    songs: list[models.Song] = db.query(models.Album).filter(
+        models.Album.title == "Minecraft - Volume Alpha").first().songs
 
-    )
-    realSong = models.Song(
-        title="testw",
-        duration=5,
-        extractor="youtube",
-        weburl="youtube.com/watch?v=Y5KFnQYCdsk",
+    [print(md5(x.thumbnail).digest()) for x in songs]
 
-    )
-    testPlaylist = models.Playlist(
-        title="testplaylist"
-    )
-    models.PlaylistSong(
-        dateadded=datetime.now(),
-        song=fakeSong,
-        playlist=testPlaylist
-    )
-    models.PlaylistSong(
-        dateadded=datetime.now(),
-        song=realSong,
-        playlist=testPlaylist
-    )
-    # db.add(testPlaylist)
 
-    testPlaylist = db.query(models.Playlist).first()
-    # asyncio.run(downloadPlaylist(db, testPlaylist))
+    def func1():
+        db: Session = SessionLocal()
 
-    # print(list(filter(lambda a: type(a) is not models.Song, asyncio.run(downloadAll(db)) )))
-    print(asyncio.run(dbDownloadAll(db)))
-    # asyncio.run(downloadPlaylist(db, db.query(models.Playlist).filter(models.Playlist.title=="music").first()))
+        fakeSong = models.Song(
+            title="test1",
+            duration=5,
+            extractor="testextractor",
+            weburl="bogusurl",
+
+        )
+        realSong = models.Song(
+            title="testw",
+            duration=5,
+            extractor="youtube",
+            weburl="youtube.com/watch?v=Y5KFnQYCdsk",
+
+        )
+        testPlaylist = models.Playlist(
+            title="testplaylist"
+        )
+        models.PlaylistSong(
+            dateadded=datetime.now(),
+            song=fakeSong,
+            playlist=testPlaylist
+        )
+        models.PlaylistSong(
+            dateadded=datetime.now(),
+            song=realSong,
+            playlist=testPlaylist
+        )
+        # db.add(testPlaylist)
+
+        testPlaylist = db.query(models.Playlist).first()
+        # asyncio.run(downloadPlaylist(db, testPlaylist))
+
+        # print(list(filter(lambda a: type(a) is not models.Song, asyncio.run(downloadAll(db)) )))
+        print(asyncio.run(dbDownloadAll(db)))
+        # asyncio.run(downloadPlaylist(db, db.query(models.Playlist).filter(models.Playlist.title=="music").first()))
