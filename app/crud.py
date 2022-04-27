@@ -266,7 +266,6 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
                     artistDict[song.artist] = models.Artist(
                         title=song.artist,
                         songs=[ormsong],
-                        albums=[]
                     )
                 else:
                     artistDict[song.artist].songs.append(ormsong)
@@ -276,10 +275,8 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
                     if song.album not in albumDict:
                         albumDict[song.album] = models.Album(
                             title=song.album,
-                            artist=artistDict[song.artist],
                             songs=[ormsong]
                         )
-                        artistDict[song.artist].albums.append(albumDict[song.album])
                     else:
                         albumDict[song.album].songs.append(ormsong)
             else:
