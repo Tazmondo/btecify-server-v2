@@ -138,3 +138,102 @@ def test_get_song_thumb():
 
     response = client.get('/song/2/src')
     assert (response.status_code == 469)
+
+
+def test_post_song():
+    make_test_db()
+    # Goals for this test:
+    #   add a new song !
+    #   test that get song endpoint returns right song !
+    #   test that the source endpoint returns the right source !
+    #   test that given playlists do contain the song !
+    #   test that given artist and album contain the song ?
+
+    #   test that duplicate song weburls cause 204 and add to other playlists. !
+    #   test song with invalid url !
+    #   test song with playlists that dont exist !
+    #   test song with an artist/album that doesnt exist yet
+
+    newsong = {
+        'song': {
+            'weburl': "https://www.youtube.com/watch?v=ntX9LYIc5Ak",
+            'title': "the new song",
+            'artist': "artist1",
+            'album': 'album1'
+        },
+        'playlists': [1]
+    }
+    response = client.post('/song', json=newsong)
+    data = response.json()
+    assert (response.status_code == 200)
+    assert (data['title'] == newsong['song']['title'])
+    assert (data['album']['title'] == newsong['song']['album'])
+    assert (data['artist']['title'] == newsong['song']['artist'])
+    assert (len(data['playlists']) == len(newsong['playlists']))
+
+    id = data['id']
+    response_song_get = client.get('/song/' + str(id))
+    data2 = response_song_get.json()
+
+    assert (data == data2)
+
+    musichex = "0000001C6674797069736F6D0000020069736F6D69736F326D7034310000"
+    response_source = client.get('/song/' + str(id) + '/src')
+    assert (response_source.content.hex().upper()[:60] == musichex)
+
+    thumbhex = "524946464EA20000574542505650382042A200003054049D012A0005D002"
+    response_thumb = client.get('/song/' + str(id) + '/thumb')
+    assert (response_thumb.content.hex().upper()[:60] == thumbhex)
+
+    response_playlist = map(lambda song: song['id'], client.get('/playlist/1').json()['songs'])
+
+    assert (id in response_playlist)
+
+    newsong = {
+        'song': {
+            'weburl': "https://www.youtube.com/watch?v=ntX9LYIc5Ak",
+            'title': "the new song",
+            'artist': "artist1",
+            'album': 'album1'
+        },
+        'playlists': [1, 2]
+    }
+    response = client.post('/song', json=newsong)
+    data = response.json()
+    id = data['id']
+    assert (response.status_code == 204)
+    response_playlist1 = map(lambda song: song['id'], client.get('/playlist/1').json()['songs'])
+    response_playlist2 = map(lambda song: song['id'], client.get('/playlist/2').json()['songs'])
+
+    assert (id in response_playlist1 and id in response_playlist2)
+
+    make_test_db()
+
+    newsong = {
+        'song': {
+            'weburl': "hehehehaha",
+            'title': "the new song",
+            'artist': "artist1",
+            'album': 'album1'
+        },
+        'playlists': [1, 2]
+    }
+    playlists = client.get('/playlist', params={'shallow': False}).json()
+    response = client.post('/song', json=newsong)
+    playlists2 = client.get('/playlist', params={'shallow': False}).json()
+    assert (response.status_code == 500)
+    assert (playlists == playlists2)  # Make sure no changes are committed.
+
+    make_test_db()
+
+    newsong = {
+        'song': {
+            'weburl': "https://www.youtube.com/watch?v=ntX9LYIc5Ak",
+            'title': "the new song",
+            'artist': "artist1",
+            'album': 'album1'
+        },
+        'playlists': [1, 2, 12312312]
+    }
+    response = client.post('/song', json=newsong)
+    assert (response.status_code == 200)

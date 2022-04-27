@@ -3,7 +3,7 @@ from datetime import datetime
 from os import environ
 from typing import Union
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from yt_dlp.utils import DownloadError
@@ -85,18 +85,11 @@ async def putPlaylist(playlistid: int, newplaylist: schemas.PlaylistIn, db: Sess
         playlistmodel.title = newplaylist.title
 
     if newplaylist.songs is not None:
-        newsongs = db.query(models.Song).filter(models.Song.id.in_(newplaylist.songs)).all()
-
-        if len(newsongs) != len(newplaylist.songs):  # All inputted songs should be valid.
+        try:
+            crud.addSongsToPlaylist(playlistmodel.id, newplaylist.songs, db, clear=True)
+        except ValueError:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Requested songs not found.")
 
-        playlistmodel.songs = [
-            models.PlaylistSong(
-                playlist=playlistmodel,
-                song=song,
-                dateadded=datetime.now()
-            ) for song in newsongs
-        ]
 
     db.commit()
     return playlistmodel
@@ -195,10 +188,18 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
 
 
 @app.post('/song', response_model=schemas.Song)
-async def postSong(song: schemas.SongIn, playlists: list[int], db: Session = Depends(getdb)):
+async def postSong(song: schemas.SongIn, playlists: list[int], response: Response, db: Session = Depends(getdb)):
+    oldSong = db.query(models.Song).filter(models.Song.weburl == song.weburl).first()
+    if oldSong is not None:
+        for playlist_id in playlists:
+            crud.addSongsToPlaylist(playlist_id, [oldSong.id], db)
+
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return oldSong
+
     song = await crud.addSong(song, playlists, db)
     if not song:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not download song...")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Could not download song")
 
     return song
 
@@ -211,7 +212,7 @@ async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
 @app.post('/fulldownload', response_model=list[schemas.Song])
 async def fullDownload(db: Session = Depends(getdb)):
     allSongs = db.query(models.Song).all()
-    failures = await crud.fetchSongs(allSongs)
+    failures = await crud.downloadExistingSongs(allSongs)
     db.commit()
 
     return failures

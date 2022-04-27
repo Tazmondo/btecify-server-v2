@@ -113,12 +113,10 @@ def make_test_db():
     artist1 = Artist(
         title="artist1",
         songs=album1.songs,
-        albums=[album1]
     )
     artist2 = Artist(
         title="artist2",
         songs=album2.songs,
-        albums=[album2]
     )
 
     db.add(playlist1)

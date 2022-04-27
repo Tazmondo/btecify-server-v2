@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+from hashlib import md5
 from typing import Union
 
 from sqlalchemy.orm import Session
@@ -11,9 +12,13 @@ from app.extractor import downloadSong
 
 
 async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Union[models.Song, bool]:
-    playlistModels = db.query(models.Playlist).filter(models.Playlist.id in playlists).all()
+    playlistModels = db.query(models.Playlist).filter(models.Playlist.id.in_(playlists)).all()
 
-    songDownload: schemas.SongDownload = await downloadSong(song.weburl)
+    try:
+        songDownload: schemas.SongDownload = await downloadSong(song.weburl)
+    except DownloadError:
+        return False
+
     if songDownload.data is None:
         return False
 
@@ -39,8 +44,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
 
     if album and not albumModel:
         albumModel = models.Album(
-            title=album,
-            artist=artistModel
+            title=album
         )
 
     thumbhash = md5(songDownload.thumbdata).hexdigest()
@@ -52,6 +56,11 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
             ext=songDownload.thumbext
         )
 
+    playlist_additions = [models.PlaylistSong(
+        dateadded=datetime.now(),
+        playlist=playlist
+    ) for playlist in playlistModels]
+
     try:
         songModel = models.Song(
             weburl=meta.get('webpage_url') or song.weburl,
@@ -59,12 +68,11 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
             duration=meta['duration'],
             artist=artistModel or None,
             album=albumModel or None,
-            playlists=playlistModels,
-            extractor=meta['extractor_key'],
+            playlists=playlist_additions,
+            extractor=meta.get('extractor_key'),
             data=songDownload.data,
             dataext=songDownload.dataext,
             thumbnail=thumbobj,
-            thumburl=meta.get('thumbnail')
         )
     except KeyError as e:
         print(e)
@@ -89,7 +97,7 @@ async def dbDownloadPlaylist(db: Session, playlist: models.Playlist):
         .filter(models.PlaylistSong.playlist_id == playlist.id) \
         .all()
 
-    results = await fetchSongs(songs, db)
+    results = await downloadExistingSongs(songs, db)
     db.commit()
     return results
 
@@ -97,13 +105,13 @@ async def dbDownloadPlaylist(db: Session, playlist: models.Playlist):
 async def dbDownloadAll(db: Session):
     songs: list[models.Song] = db.query(models.Song).all()
 
-    results = await fetchSongs(songs, db)
+    results = await downloadExistingSongs(songs, db)
     db.commit()
 
     return results
 
 
-async def fetchSongs(songs: list[models.Song], db: Session):
+async def downloadExistingSongs(songs: list[models.Song], db: Session):
     # Fetch all songs concurrently
     results = await asyncio.gather(*[downloadExistingSong(song, db) for song in songs], return_exceptions=True)
     failures = list(filter(lambda a: a not in results, songs))
@@ -158,6 +166,35 @@ async def getSongThumb(song: models.Song, db: Session):
         return song
     else:
         return False
+
+
+def addSongsToPlaylist(playlist_id: int, song_ids: list[int], db: Session, clear: bool = False):
+    playlist = db.get(models.Playlist, playlist_id)
+    if playlist is None:
+        return False
+
+    newsongs = db.query(models.Song).filter(models.Song.id.in_(song_ids)).all()
+
+    if len(newsongs) != len(song_ids):  # All inputted songs should be valid.
+        raise ValueError(f"{len(song_ids) - len(newsongs)} inputted songs were invalid.")
+
+    oldsongs = []
+    if not clear:
+        oldsongs = playlist.songs
+        newsongs = list(
+            filter(lambda song: song.id not in map(lambda playlistsong: playlistsong.song_id, playlist.songs),
+                   newsongs))
+
+    playlist.songs = oldsongs + [
+        models.PlaylistSong(
+            playlist=playlist,
+            song=song,
+            dateadded=datetime.now()
+        ) for song in newsongs
+    ]
+
+    db.commit()
+    return True
 
 
 def fullSync(syncdata: schemas.FullSync, db: Session):
@@ -261,11 +298,10 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
 
 if __name__ == "__main__":
     from app.db import SessionLocal
-    from hashlib import md5
 
-    db: Session = SessionLocal()
+    db1: Session = SessionLocal()
 
-    songs: list[models.Song] = db.query(models.Album).filter(
+    songs: list[models.Song] = db1.query(models.Album).filter(
         models.Album.title == "Minecraft - Volume Alpha").first().songs
 
     [print(md5(x.thumbnail).digest()) for x in songs]

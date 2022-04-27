@@ -53,8 +53,9 @@ class Album(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String, nullable=False)
 
-    artist_id = Column(Integer, ForeignKey('artist.id'))
-    artist = relationship("Artist", back_populates="albums")
+    # Commented until i have a way of differentiating between albums with the same name
+    # artist_id = Column(Integer, ForeignKey('artist.id'))
+    # artist = relationship("Artist", back_populates="albums")
 
     songs = relationship("Song", back_populates="album")
 
@@ -65,7 +66,7 @@ class Artist(Base):
     title = Column(String, nullable=False, unique=True)
 
     songs = relationship("Song", back_populates="artist")
-    albums = relationship("Album", back_populates="artist")
+    # albums = relationship("Album", back_populates="artist")
 
 
 class Playlist(Base):
