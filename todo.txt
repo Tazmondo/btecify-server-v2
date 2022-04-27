@@ -1,0 +1,6 @@
+Hash images for collisions, and use filesystem instead.
+
+    Hashing music probably wont work due to compression and stuff??
+
+
+
