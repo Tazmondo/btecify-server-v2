@@ -1,3 +1,4 @@
+import asyncio
 import io
 from datetime import datetime
 from os import environ
@@ -12,6 +13,7 @@ import app.crud as crud
 import app.models as models
 import app.schemas as schemas
 from app.db import SessionLocal, engine
+from app.jobmanager import jobs
 from app.models import Base
 
 app = FastAPI()
@@ -89,7 +91,6 @@ async def putPlaylist(playlistid: int, newplaylist: schemas.PlaylistIn, db: Sess
             crud.addSongsToPlaylist(playlistmodel.id, newplaylist.songs, db, clear=True)
         except ValueError:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Requested songs not found.")
-
 
     db.commit()
     return playlistmodel
@@ -214,6 +215,23 @@ async def fullDownload(db: Session = Depends(getdb)):
     db.commit()
 
     return failures
+
+
+@app.on_event('startup')
+async def clearJobTask():
+    async def task():
+        while True:
+            await asyncio.sleep(30)
+            currentTime = datetime.now()
+            for job in jobs:
+                time_diff = (currentTime - job.last_used).total_seconds()
+                if (time_diff > 30 and job.status is True) or time_diff > 180:  # Soft and hard timeouts of 10 and 60.
+                    if time_diff > 180:
+                        print("\nWARNING: JOB HARD TIMED OUT.")
+                        print(job, end='\n\n')
+                    del jobs[job.job_id]
+
+    asyncio.create_task(task())
 
 
 print("http://127.0.0.1:8000/docs")
