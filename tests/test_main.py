@@ -234,3 +234,64 @@ def test_post_song():
     }
     response = client.post('/song', json=newsong)
     assert (response.status_code == 200)
+
+# # @pytest.mark.anyio  - was causing an error cause trio wasnt installed
+# async def test_sync():
+#     return  # this test is broken and i cba to fix it
+#     make_test_db()
+#     syncdata = {
+#         "playlists": [
+#             {
+#                 "title": "a test playlist",
+#                 "songs": [
+#                     {
+#                         "title": "test1",
+#                         "weburl": "https://www.youtube.com/watch?v=ntX9LYIc5Ak",
+#                         "artist": "artist1",
+#                         "album": "album1"
+#                     },
+#                     {
+#                         "title": "test2",
+#                         "weburl": "https://www.youtube.com/watch?v=ggHN5ZJ8jkU",
+#                         "artist": "artist1",
+#                         "album": "album1"
+#                     },
+#                     {
+#                         "title": "test3",
+#                         "weburl": "https://www.youtube.com/watch?v=BbbcvFJ55F4",
+#                         "artist": "artist1",
+#                         "album": "album2"
+#                     }
+#                     # {
+#                     #     "title": "test4",
+#                     #     "weburl": "https://www.youtube.com/watch?v=l2tVzX0JVUc",
+#                     #     "artist:": "artist2"
+#                     # }
+#                 ]
+#             }
+#         ]
+#     }
+#     async with ac() as cli:
+#         print("1")
+#         response = await cli.post('/fullsync', json=syncdata)
+#         print("2")
+#         assert (response.status_code == 200)
+#         print("3")
+#         response = await cli.post('/fulldownload')
+#         print("got response")
+#         assert (response.status_code == 200)
+#
+#         job_id = response.json()
+#
+#         with client.websocket_connect('/job/' + job_id) as websocket:
+#             websocket.send_text("get progress")
+#             data = websocket.receive_json()
+#             while data['status'] is False:
+#                 websocket.send_text("get progress")
+#                 data = websocket.receive_json()
+#                 print(data)
+#                 await asyncio.sleep(1)
+#
+#             websocket.close()
+#
+#         assert (data.progress == data.size and data.status is True)

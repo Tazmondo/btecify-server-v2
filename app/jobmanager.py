@@ -10,7 +10,7 @@ from uuid import uuid4 as uuid
 class Job:
     job_id: str
     size: int
-    coroutines: list[Coroutine]
+    coroutines: list[asyncio.Future]
     last_used: datetime
     progress: int = 0
     status: bool = False
@@ -53,6 +53,18 @@ def get_job(job_id: str):
         job.last_used = datetime.now()
 
     return job
+
+
+def delete_job(job_id):
+    job = jobs.get(job_id)
+    if job:
+        for job_task in job.coroutines:  # Cancel job's current tasks.
+            job_task.cancel()
+
+        del jobs[job.job_id]
+
+        return True
+    return False
 
 
 if __name__ == "__main__":

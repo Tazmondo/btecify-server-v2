@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -132,6 +133,14 @@ def get_test_db():
         yield db
     finally:
         db.close()
+
+
+def ac():
+    return AsyncClient(app=app, base_url="http://test")
+
+
+def tc():
+    return TestClient(app)
 
 
 app.dependency_overrides[getdb] = get_test_db

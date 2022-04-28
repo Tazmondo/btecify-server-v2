@@ -4,7 +4,7 @@ from datetime import datetime
 from os import environ
 from typing import Union
 
-from fastapi import FastAPI, Depends, HTTPException, status, Response, WebSocket
+from fastapi import FastAPI, Depends, HTTPException, status, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from yt_dlp.utils import DownloadError
@@ -13,7 +13,7 @@ import app.crud as crud
 import app.models as models
 import app.schemas as schemas
 from app.db import SessionLocal, engine
-from app.jobmanager import jobs, get_job
+from app.jobmanager import jobs, get_job, delete_job
 from app.models import Base
 
 app = FastAPI()
@@ -211,8 +211,8 @@ async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
 @app.post('/fulldownload', response_model=str)
 async def fullDownload(db: Session = Depends(getdb)):
     allSongs = db.query(models.Song).all()
-
-    return await crud.downloadExistingSongsJob(allSongs, db)
+    job_id = await crud.downloadExistingSongsJob(allSongs, db)
+    return job_id
 
 
 @app.websocket('/job/{job_id}')
@@ -222,9 +222,15 @@ async def job_websocket(websocket: WebSocket, job_id: str):
         await websocket.close(3006)
 
     await websocket.accept()
-    while True:
-        client_data = await websocket.receive_text()
-        await websocket.send_json(schemas.Job(**job.__dict__))  # Make new schema with just important info from just
+    try:
+        while True:
+            client_data = await websocket.receive_text()
+            await websocket.send_json(
+                schemas.Job(**job.__dict__).dict())  # Make new schema with just important info from just
+            await asyncio.sleep(0.5)  # Max update rate is 0.5 no matter how fast client requests the data.
+    except WebSocketDisconnect:
+        # delete_job(job_id)  # Mark job for deletion
+        pass
 
 
 @app.on_event('startup')
@@ -240,7 +246,8 @@ async def clearJobTask():
                     if time_diff > 180:
                         print("\nWARNING: JOB HARD TIMED OUT.")
                         print(job, end='\n\n')
-                    del jobs[job.job_id]
+
+                    delete_job(job.job_id)
 
     asyncio.create_task(task())
 
