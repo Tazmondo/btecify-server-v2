@@ -148,3 +148,10 @@ class PlaylistFullSync(BaseModel):
 
 class FullSync(BaseModel):
     playlists: list[PlaylistFullSync]
+
+
+class Job(BaseModel):
+    job_id: str
+    size: int
+    progress: int = 0
+    status: bool = False

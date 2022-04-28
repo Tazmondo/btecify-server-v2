@@ -87,4 +87,4 @@ if __name__ == "__main__":
         await awaiter(done())
 
 
-    asyncio.run(entry2())
+    asyncio.run(entry())

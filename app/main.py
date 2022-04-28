@@ -4,7 +4,7 @@ from datetime import datetime
 from os import environ
 from typing import Union
 
-from fastapi import FastAPI, Depends, HTTPException, status, Response
+from fastapi import FastAPI, Depends, HTTPException, status, Response, WebSocket
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from yt_dlp.utils import DownloadError
@@ -13,7 +13,7 @@ import app.crud as crud
 import app.models as models
 import app.schemas as schemas
 from app.db import SessionLocal, engine
-from app.jobmanager import jobs
+from app.jobmanager import jobs, get_job
 from app.models import Base
 
 app = FastAPI()
@@ -213,6 +213,18 @@ async def fullDownload(db: Session = Depends(getdb)):
     allSongs = db.query(models.Song).all()
 
     return await crud.downloadExistingSongsJob(allSongs, db)
+
+
+@app.websocket('/job/{job_id}')
+async def job_websocket(websocket: WebSocket, job_id: str):
+    job = get_job(job_id)
+    if job is None:
+        await websocket.close(3006)
+
+    await websocket.accept()
+    while True:
+        client_data = await websocket.receive_text()
+        await websocket.send_json(schemas.Job(**job.__dict__))  # Make new schema with just important info from just
 
 
 @app.on_event('startup')
