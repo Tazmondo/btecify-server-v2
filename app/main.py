@@ -170,8 +170,6 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
 })
 async def getSongThumb(songid: int, db: Session = Depends(getdb)):
     dbsong = getSongFromDb(songid, db)
-    if dbsong.disabled:
-        raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
 
     if not dbsong.thumbnail:
         result = await crud.getSongThumb(dbsong, db)
