@@ -135,10 +135,10 @@ class ExceptionResponse(BaseModel):
 class SongFullSync(BaseModel):
     title: str
     album: str | None
-    duration: float
-    extractor: str
-    weburl: str | None
-    artist: str
+    duration: float | None
+    extractor: str | None
+    weburl: str
+    artist: str | None
 
 
 class PlaylistFullSync(BaseModel):

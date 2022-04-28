@@ -270,20 +270,21 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
                 # Make new song in db
                 ormsong = models.Song(
                     title=song.title,
-                    duration=song.duration,
-                    extractor=song.extractor,
-                    weburl=song.weburl
+                    weburl=song.weburl,
+                    duration=song.duration or None,
+                    extractor=song.extractor or None,
                 )
 
                 songsDict[song.weburl] = ormsong
 
-                if song.artist not in artistDict:
-                    artistDict[song.artist] = models.Artist(
-                        title=song.artist,
-                        songs=[ormsong],
-                    )
-                else:
-                    artistDict[song.artist].songs.append(ormsong)
+                if song.artist:
+                    if song.artist not in artistDict:
+                        artistDict[song.artist] = models.Artist(
+                            title=song.artist,
+                            songs=[ormsong],
+                        )
+                    else:
+                        artistDict[song.artist].songs.append(ormsong)
 
                 # Initialise album
                 if song.album:
