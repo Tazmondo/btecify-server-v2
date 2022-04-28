@@ -19,7 +19,7 @@ class Job:
 jobs: dict[str, Job] = {}
 
 
-async def coroutine_wrapper(coroutine: Coroutine, job: Job):
+async def coroutine_wrapper(coroutine: Coroutine, job: Job, on_finish: Coroutine):
     try:
         result = await coroutine
     except Exception as e:
@@ -29,11 +29,12 @@ async def coroutine_wrapper(coroutine: Coroutine, job: Job):
     job.last_used = datetime.now()
     if job.progress == job.size:
         job.status = True
+        await on_finish
     return result
 
 
 # Takes a coroutine, runs it, and returns a job id which can be used to get its status.
-async def start_job(coroutines: list[Coroutine]) -> str:
+async def start_job(coroutines: list[Coroutine], on_finish: Coroutine = None) -> str:
     newjobid = str(uuid())
     job = Job(
         job_id=newjobid,
@@ -41,7 +42,7 @@ async def start_job(coroutines: list[Coroutine]) -> str:
         coroutines=[],
         last_used=datetime.now()
     )
-    job.coroutines = asyncio.gather(*[coroutine_wrapper(coroutine, job) for coroutine in coroutines])
+    job.coroutines = asyncio.gather(*[coroutine_wrapper(coroutine, job, on_finish) for coroutine in coroutines])
     jobs[newjobid] = job
     return newjobid
 
@@ -76,4 +77,14 @@ if __name__ == "__main__":
         print(timetaken, job)
 
 
-    asyncio.run(entry())
+    async def entry2():
+        async def done():
+            print("lol")
+
+        async def awaiter(thing):
+            await thing
+
+        await awaiter(done())
+
+
+    asyncio.run(entry2())

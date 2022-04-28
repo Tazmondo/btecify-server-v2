@@ -9,6 +9,7 @@ from yt_dlp.utils import DownloadError
 import app.models as models
 import app.schemas as schemas
 from app.extractor import downloadSong
+from app.jobmanager import start_job
 
 
 async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Union[models.Song, bool]:
@@ -109,6 +110,17 @@ async def dbDownloadAll(db: Session):
     db.commit()
 
     return results
+
+
+async def downloadExistingSongsJob(songs: list[models.Song], db: Session):
+    # Fetch all songs concurrently
+    download_coroutines = [downloadExistingSong(song, db) for song in songs]
+
+    async def finished():
+        db.commit()
+
+    job_id = await start_job(download_coroutines, finished())
+    return job_id
 
 
 async def downloadExistingSongs(songs: list[models.Song], db: Session):
@@ -301,10 +313,10 @@ if __name__ == "__main__":
 
     db1: Session = SessionLocal()
 
-    songs: list[models.Song] = db1.query(models.Album).filter(
-        models.Album.title == "Minecraft - Volume Alpha").first().songs
+    songs1: list[models.Song] = db1.query(models.Album).filter(
+        models.Album.title == "Minecraft - Volume Alpha").first().songs1
 
-    [print(md5(x.thumbnail).digest()) for x in songs]
+    [print(md5(x.thumbnail).digest()) for x in songs1]
 
 
     def func1():

@@ -20,9 +20,9 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 if environ.get('devmode'):
-    from fastapi_profiler.profiler_middleware import PyInstrumentProfilerMiddleware
+    pass
 
-    app.add_middleware(PyInstrumentProfilerMiddleware)
+    # app.add_middleware(PyInstrumentProfilerMiddleware)
 
 
 # Dependency
@@ -208,13 +208,11 @@ async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
     crud.fullSync(syncdata, db)
 
 
-@app.post('/fulldownload', response_model=list[schemas.Song])
+@app.post('/fulldownload', response_model=str)
 async def fullDownload(db: Session = Depends(getdb)):
     allSongs = db.query(models.Song).all()
-    failures = await crud.downloadExistingSongs(allSongs)
-    db.commit()
 
-    return failures
+    return await crud.downloadExistingSongsJob(allSongs, db)
 
 
 @app.on_event('startup')
@@ -223,7 +221,8 @@ async def clearJobTask():
         while True:
             await asyncio.sleep(30)
             currentTime = datetime.now()
-            for job in jobs:
+            for job in list(
+                    jobs.values()):  # Use list because cannot delete from an iterator while iterating through it
                 time_diff = (currentTime - job.last_used).total_seconds()
                 if (time_diff > 30 and job.status is True) or time_diff > 180:  # Soft and hard timeouts of 10 and 60.
                     if time_diff > 180:
