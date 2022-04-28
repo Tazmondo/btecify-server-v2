@@ -47,9 +47,9 @@ async def downloadSong(url: str) -> schemas.SongDownload:
         "format": "worstaudio",
         "outtmpl": f'./extractions/{uuid}',
         "writethumbnail": True,
-        # "quiet": True,
-        # "no_warnings": True,
-        # "logger": locallogger
+        "quiet": True,
+        "no_warnings": True,
+        "logger": locallogger
     }
 
     info = await loop.run_in_executor(None, extract, options, url)
