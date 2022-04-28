@@ -161,10 +161,13 @@ async def getSongSource(song: models.Song, db: Session):
 
 
 async def getSongThumb(song: models.Song, db: Session):
-    song = await dbDownloadSong(db, song, True)
-    if song.thumbnail is not None:
-        return song
-    else:
+    try:
+        song = await dbDownloadSong(db, song, True)
+        if song.thumbnail is not None:
+            return song
+        else:
+            return False
+    except DownloadError as e:
         return False
 
 
