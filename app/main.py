@@ -236,6 +236,10 @@ async def job_websocket(websocket: WebSocket, job_id: str):
             client_data = await websocket.receive_text()
             await websocket.send_json(
                 schemas.Job(**job.__dict__).dict())  # Make new schema with just important info from just
+            if job.status:
+                # Close websocket when job completion is sent.
+                await websocket.close(code=3005)
+                raise WebSocketDisconnect
             await asyncio.sleep(0.5)  # Max update rate is 0.5 no matter how fast client requests the data.
     except WebSocketDisconnect:
         # delete_job(job_id)  # Mark job for deletion
