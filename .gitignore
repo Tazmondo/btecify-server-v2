@@ -4,3 +4,4 @@ extractions
 testing
 count-loc.py
 __pycache__
+build-image.bat
