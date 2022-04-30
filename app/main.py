@@ -209,10 +209,19 @@ async def fullSync(syncdata: schemas.FullSync, db: Session = Depends(getdb)):
 
 
 @app.post('/fulldownload', response_model=str)
-async def fullDownload(db: Session = Depends(getdb)):
-    allSongs = db.query(models.Song).all()
-    job_id = await crud.downloadExistingSongsJob(allSongs, db)
-    return job_id
+async def fullDownload():
+    db: Session = SessionLocal()
+
+    def finished():
+        db.close()
+
+    try:
+        allSongs = db.query(models.Song).all()
+        job_id = await crud.downloadExistingSongsJob(allSongs, db, finished)
+        return job_id
+    except Exception as e:
+        finished()
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, e)
 
 
 @app.websocket('/job/{job_id}')

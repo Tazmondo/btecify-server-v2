@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 from hashlib import md5
-from typing import Union
+from typing import Union, Callable
 
 from sqlalchemy.orm import Session
 from yt_dlp.utils import DownloadError
@@ -112,12 +112,15 @@ async def dbDownloadAll(db: Session):
     return results
 
 
-async def downloadExistingSongsJob(songs: list[models.Song], db: Session):
+async def downloadExistingSongsJob(songs: list[models.Song], db: Session, finish_func: Callable = None):
     # Fetch all songs concurrently
     download_coroutines = [downloadExistingSong(song, db) for song in songs]
 
     async def finished():
+        print("Finished fulldownload, comitting to db...")
         db.commit()
+        if finish_func is not None:
+            finish_func()
 
     job_id = await start_job(download_coroutines, finished())
     return job_id
@@ -154,7 +157,7 @@ async def downloadExistingSong(song: models.Song, db: Session, force: bool = Fal
                 )
 
             song.disabled = False
-            print(f"Fetched {song.title} : {song.weburl}")
+            print(f"Fetched {song.title} : {song.weburl}, {song.dataext}")
         except DownloadError as e:
             if "video" in e.msg.lower():
                 print(f"\n\nDISABLING {song.title}, COULD BE UNAVAILABLE.\n{e.msg}\n")
