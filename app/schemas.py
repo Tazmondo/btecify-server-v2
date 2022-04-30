@@ -65,7 +65,7 @@ class SongBase(BaseModel):
     duration: float | None
     extractor: str | None
     weburl: str
-    artist: Artist
+    artist: Artist | None
 
 
 class SongPlaylist(PlaylistBase):
