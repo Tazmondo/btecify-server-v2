@@ -142,6 +142,7 @@ async def downloadExistingSong(song: models.Song, db: Session, force: bool = Fal
             song.data = songdownload.data
             song.dataext = songdownload.dataext
             song.extractor = songdownload.extractor
+            song.duration = songdownload.info['duration']
 
             song.thumburl = songdownload.info['thumbnail']
 
