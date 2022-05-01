@@ -61,10 +61,11 @@ class PlaylistBase(BaseModel):
 class SongBase(BaseModel):
     id: int
     title: str
+    weburl: str
+    disabled: bool
     album: Album | None
     duration: float | None
     extractor: str | None
-    weburl: str
     artist: Artist | None
 
 
