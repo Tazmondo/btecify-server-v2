@@ -124,6 +124,11 @@ async def postPlaylist(playlist: schemas.PlaylistIn, db: Session = Depends(getdb
 # todo: delete playlist
 
 
+@app.get('/song', response_model=list[schemas.Song])
+async def getSongs(db: Session = Depends(getdb)):
+    return db.query(models.Song).all()
+
+
 @app.get('/song/{songid}', response_model=schemas.Song)
 async def getSong(songid: int, db: Session = Depends(getdb)):
     song = db.query(models.Song).get(songid)

@@ -97,6 +97,14 @@ def test_post_playlist():
     assert data == {'title': 'new test playlist', 'songs': [], 'id': 3}
 
 
+def test_get_songs():
+    make_test_db()
+    response = client.get('/song')
+    expected = """[{"id":1,"title":"song1","album":{"id":1,"title":"album2"},"duration":50.3,"extractor":"youtube","weburl":"https://www.youtube.com/watch?v=iSqnJPdyqFM","artist":{"id":1,"title":"artist2"},"playlists":[{"id":1,"title":"playlist1","dateadded":"2022-04-23T02:40:00"}]},{"id":2,"title":"song4","album":{"id":1,"title":"album2"},"duration":null,"extractor":null,"weburl":"a bad url","artist":{"id":1,"title":"artist2"},"playlists":[{"id":1,"title":"playlist1","dateadded":"2022-04-26T02:40:00"}]},{"id":3,"title":"song2","album":{"id":2,"title":"album1"},"duration":22.3,"extractor":"bandcamp","weburl":"https://www.youtube.com/watch?v=ggHN5ZJ8jkU","artist":{"id":2,"title":"artist1"},"playlists":[{"id":1,"title":"playlist1","dateadded":"2022-04-24T02:40:00"},{"id":2,"title":"playlist2","dateadded":"2022-04-25T02:40:00"}]},{"id":4,"title":"song3","album":{"id":2,"title":"album1"},"duration":10.3,"extractor":"youtube","weburl":"https://www.youtube.com/watch?v=BbbcvFJ55F4","artist":{"id":2,"title":"artist1"},"playlists":[{"id":2,"title":"playlist2","dateadded":"2022-04-26T02:40:00"}]}]"""
+    assert (response.status_code == 200)
+    assert (response.text == expected)
+
+
 def test_get_song():
     make_test_db()
     response = client.get('/song/1')
