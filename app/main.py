@@ -121,6 +121,17 @@ async def postPlaylist(playlist: schemas.PlaylistIn, db: Session = Depends(getdb
     return newPlaylist
 
 
+@app.delete('/playlist/{playlist_id}')
+async def deletePlaylist(playlist_id: int, db: Session = Depends(getdb)):
+    playlist = db.get(models.Playlist, playlist_id)
+    if playlist is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Could not find provided playlist")
+
+    db.delete(playlist)
+    db.commit()
+    return "Deletion successful"
+
+
 # todo: delete playlist
 
 

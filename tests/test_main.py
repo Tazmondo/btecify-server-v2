@@ -97,6 +97,27 @@ def test_post_playlist():
     assert data == {'title': 'new test playlist', 'songs': [], 'id': 3}
 
 
+def test_delete_playlist():
+    make_test_db()
+    response = client.delete('/playlist/2435')
+    assert (response.status_code == 404)
+
+    response = client.get('/playlist/2')
+    assert (response.status_code == 200)
+
+    response = client.get('/song/4')
+    assert (len(response.json()['playlists']) == 1)
+
+    response = client.delete('/playlist/2')
+    assert (response.status_code == 200)
+
+    response = client.get('/playlist/2')
+    assert (response.status_code == 404)
+
+    response = client.get('/song/4')
+    assert (len(response.json()['playlists']) == 0)
+
+
 def test_get_songs():
     make_test_db()
     response = client.get('/song')
