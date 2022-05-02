@@ -154,6 +154,7 @@ def test_get_song_src():
     assert (response.status_code == 469)
 
 
+# todo: fix me with the new way thumbnails are done
 def test_get_song_thumb():
     make_test_db()
     response = client.get('/song/3/thumb')
