@@ -86,7 +86,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
 
 
 async def dbDownloadSong(db: Session, song: models.Song, force: bool = False):
-    song = await downloadExistingSong(song, force)
+    song = await downloadExistingSong(song, db, force)
 
     db.commit()
     return song
