@@ -171,7 +171,19 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
         except DownloadError as e:
             raise HTTPException(469, "Could not download")
 
-    return StreamingResponse(io.BytesIO(dbsong.data), media_type=f"audio/{dbsong.dataext}")
+    data_length = len(dbsong.data)
+
+    # So that the audio player can seek to given times
+    # If 206 is not returned then (on chromium at least), audio player cannot seek
+    # Content length is the total length of the content
+    # Content range (i assume) is the range of bytes of this response, used by the player
+    #   to construct audio from chunks, but here we just send it all at once.
+    #       it might be better to send it chunked but i cba to write that code rn
+    return StreamingResponse(io.BytesIO(dbsong.data), media_type=f"audio/{dbsong.dataext}", status_code=206, headers={
+        "Accept-Ranges": 'bytes',
+        "Content-Length": str(data_length),
+        "Content-Range": f"bytes 0-{str(data_length - 1)}/{str(data_length)}"
+    })
 
 
 @app.get('/song/{songid}/thumb', responses={
@@ -199,6 +211,7 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
         thumbnail.ext = ext
         db.commit()
 
+    # Don't do ranges, could have been the cause of the weird half image loading issue that btecifyv3 had?
     return StreamingResponse(io.BytesIO(thumbnail.data), media_type=f"image/{ext}")
 
 

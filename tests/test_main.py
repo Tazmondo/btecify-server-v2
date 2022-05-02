@@ -144,7 +144,7 @@ def test_get_song():
 def test_get_song_src():
     make_test_db()
     response = client.get('/song/3/src')
-    assert (response.status_code == 200)
+    assert (response.status_code == 206)
     assert (response.content == b'some 2 sound bytes')
 
     response = client.get('/song/1/src')
