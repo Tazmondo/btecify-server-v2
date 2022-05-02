@@ -49,7 +49,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
         )
 
     thumbhash = md5(songDownload.thumbdata).hexdigest()
-    thumbobj = db.get(models.Thumbnail, thumbhash)
+    thumbobj = db.query(models.Thumbnail).filter(models.Thumbnail.hash == thumbhash).first()
     if thumbobj is None:
         thumbobj = models.Thumbnail(
             hash=thumbhash,
@@ -147,7 +147,7 @@ async def downloadExistingSong(song: models.Song, db: Session, force: bool = Fal
             song.thumburl = songdownload.info['thumbnail']
 
             thumbhash = md5(songdownload.thumbdata).hexdigest()
-            thumbobj = db.get(models.Thumbnail, thumbhash)
+            thumbobj = db.query(models.Thumbnail).filter(models.Thumbnail.hash == thumbhash).first()
             if thumbobj:
                 song.thumbnail = thumbobj
             else:

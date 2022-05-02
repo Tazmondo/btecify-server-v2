@@ -1,15 +1,15 @@
 """empty message
 
-Revision ID: c219f5c3ee5f
+Revision ID: 697676896d95
 Revises: 
-Create Date: 2022-04-27 21:37:51.012711
+Create Date: 2022-05-02 23:11:52.890901
 
 """
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = 'c219f5c3ee5f'
+revision = '697676896d95'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -35,10 +35,11 @@ def upgrade():
                     sa.PrimaryKeyConstraint('id')
                     )
     op.create_table('thumbnail',
+                    sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('hash', sa.String(), nullable=False),
-                    sa.Column('data', sa.LargeBinary(), nullable=True),
-                    sa.Column('ext', sa.String(), nullable=True),
-                    sa.PrimaryKeyConstraint('hash')
+                    sa.Column('data', sa.LargeBinary(), nullable=False),
+                    sa.Column('ext', sa.String(), nullable=False),
+                    sa.PrimaryKeyConstraint('id')
                     )
     op.create_table('user',
                     sa.Column('id', sa.Integer(), nullable=False),
@@ -56,12 +57,12 @@ def upgrade():
                     sa.Column('data', sa.LargeBinary(), nullable=True),
                     sa.Column('dataext', sa.String(), nullable=True),
                     sa.Column('weburl', sa.String(), nullable=True),
-                    sa.Column('thumb_hash', sa.String(), nullable=True),
+                    sa.Column('thumb_id', sa.String(), nullable=True),
                     sa.Column('artist_id', sa.Integer(), nullable=True),
                     sa.Column('album_id', sa.Integer(), nullable=True),
                     sa.ForeignKeyConstraint(['album_id'], ['album.id'], ),
                     sa.ForeignKeyConstraint(['artist_id'], ['artist.id'], ),
-                    sa.ForeignKeyConstraint(['thumb_hash'], ['thumbnail.hash'], ),
+                    sa.ForeignKeyConstraint(['thumb_id'], ['thumbnail.id'], ),
                     sa.PrimaryKeyConstraint('id'),
                     sa.UniqueConstraint('weburl')
                     )

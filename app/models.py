@@ -29,7 +29,7 @@ class Song(Base):
     dataext = Column(String, nullable=True)
     weburl = Column(String, nullable=True, unique=True)
 
-    thumb_hash = Column(String, ForeignKey('thumbnail.hash'), nullable=True)
+    thumb_id = Column(String, ForeignKey('thumbnail.id'), nullable=True)
     thumbnail = relationship("Thumbnail")
 
     artist_id = Column(Integer, ForeignKey('artist.id'))
@@ -43,9 +43,10 @@ class Song(Base):
 
 class Thumbnail(Base):
     __tablename__ = "thumbnail"
-    hash = Column(String, primary_key=True)
-    data = Column(LargeBinary)  # todo: move to separate table and use hashes for comparison
-    ext = Column(String)
+    id = Column(Integer, primary_key=True)
+    hash = Column(String, nullable=False)
+    data = Column(LargeBinary, nullable=False)
+    ext = Column(String, nullable=False)
 
 
 class Album(Base):

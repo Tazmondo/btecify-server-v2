@@ -186,25 +186,17 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
     })
 
 
-@app.get('/song/{songid}/thumb', responses={
-    200: {
-        "content": {"image": {}},
-        "description": "Stream back the requested thumbnail",
-    },
-    469: {
-        "model": schemas.ExceptionResponse,
-        "description": "Could not download"
-    },
-    **getSongResponses
-})
+@app.get('/song/{songid}/thumb', response_model=str)
 async def getSongThumb(songid: int, db: Session = Depends(getdb)):
     dbsong = getSongFromDb(songid, db)
+    if not dbsong:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not a valid song")
 
     if not dbsong.thumbnail:
         result = await crud.getSongThumb(dbsong, db)
         if not result:
             raise HTTPException(469, "Could not download")
-    thumbnail = dbsong.thumbnail
+    thumbnail: models.Thumbnail = dbsong.thumbnail
     ext = thumbnail.ext
     if ext.startswith('.'):  # Because some extensions in db might start with .
         ext = ext[1:]
@@ -212,7 +204,20 @@ async def getSongThumb(songid: int, db: Session = Depends(getdb)):
         db.commit()
 
     # Don't do ranges, could have been the cause of the weird half image loading issue that btecifyv3 had?
-    return StreamingResponse(io.BytesIO(thumbnail.data), media_type=f"image/{ext}")
+    return str(thumbnail.id)
+
+
+@app.get('/thumb/{thumbid}')
+async def getThumb(thumbid: int, db: Session = Depends(getdb)):
+    thumb = db.get(models.Thumbnail, thumbid)
+    if thumb is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Thumbnail not found")
+
+    ext = thumb.ext
+
+    return StreamingResponse(io.BytesIO(thumb.data), media_type=f"image/{ext}", headers={
+        "cache-control": "public, max-age=31536000"  # Cache for one year
+    })
 
 
 @app.post('/song', response_model=schemas.Song)
