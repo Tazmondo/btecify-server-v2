@@ -263,6 +263,7 @@ async def job_websocket(websocket: WebSocket, job_id: str):
     job = get_job(job_id)
     if job is None:
         await websocket.close(3006)
+        return
 
     await websocket.accept()
     try:
