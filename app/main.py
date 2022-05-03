@@ -250,7 +250,8 @@ async def fullDownload():
         db.close()
 
     try:
-        allSongs = db.query(models.Song).all()
+        allSongs = db.query(models.Song).filter(
+            (models.Song.data is None or models.Song.dataext is None) and not models.Song.disabled).all()
         job_id = await crud.downloadExistingSongsJob(allSongs, db, finished)
         return job_id
     except Exception as e:

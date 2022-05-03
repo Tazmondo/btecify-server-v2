@@ -40,7 +40,8 @@ async def start_job(coroutines: list[Coroutine], on_finish: Coroutine = None) ->
         job_id=newjobid,
         size=len(coroutines),
         coroutines=[],
-        last_used=datetime.now()
+        last_used=datetime.now(),
+        status=(len(coroutines) == 0)  # if number of coroutines is 0 it isn't infinitely stuck on false
     )
     job.coroutines = asyncio.gather(*[coroutine_wrapper(coroutine, job, on_finish) for coroutine in coroutines])
     jobs[newjobid] = job

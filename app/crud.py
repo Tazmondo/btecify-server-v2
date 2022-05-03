@@ -217,7 +217,6 @@ def addSongsToPlaylist(playlist_id: int, song_ids: list[int], db: Session, clear
 
 
 def fullSync(syncdata: schemas.FullSync, db: Session):
-    db.query(models.Song).delete()
     db.query(models.Album).delete()
     db.query(models.Artist).delete()
     db.query(models.Playlist).delete()
@@ -229,34 +228,9 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
     playlistDict = {}
     albumDict = {}
 
-    # Initialise dicts with regular data instead of ORM.
-
-    # for playlist in playlists:
-    #
-    #     # Initialise this playlist
-    #     playlistDict[playlist.title] = {"title": playlist.title, "songs": []}
-    #
-    #     for song in playlist.songs:
-    #
-    #         # Add current song to the current playlist
-    #         playlistDict[playlist.title]['songs'].append(song)
-    #
-    #         # Check for duplicate
-    #         # If not duplicate, then need to initialise artist
-    #         if song.weburl not in songsDict:
-    #             songsDict[song.weburl] = song
-    #
-    #             if song.artist not in artistDict:
-    #                 artistDict[song.artist] = {'name': song.artist, 'songs': [song], 'albums': []}
-    #             else:
-    #                 artistDict[song.artist]['songs'].append(song)
-    #
-    #             if song.album is not None:
-    #                 if song.album not in albumDict:
-    #                     albumDict[song.album] = {'title': song.album, 'songs': [song], 'artist': song.artist}
-    #                     artistDict[song.artist]['albums'].append(albumDict[song.album])
-    #                 else:
-    #                     albumDict[song.album]['songs'].append(song)
+    existingSongs = {}
+    for song in db.query(models.Song).all():
+        existingSongs[song.weburl] = song
 
     for playlist in playlists:
 
@@ -271,13 +245,20 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
             # If not duplicate, then need to initialise artist and album
             if song.weburl not in songsDict:
 
-                # Make new song in db
-                ormsong = models.Song(
-                    title=song.title,
-                    weburl=song.weburl,
-                    duration=song.duration or None,
-                    extractor=song.extractor or None,
-                )
+                if song.weburl in existingSongs:
+                    ormsong = existingSongs[song.weburl]
+                    ormsong.title = song.title
+
+                    del existingSongs[song.weburl]  # So that unsynced songs can be deleted at the end
+
+                else:
+                    # Make new song in db
+                    ormsong = models.Song(
+                        title=song.title,
+                        weburl=song.weburl,
+                        duration=song.duration or None,
+                        extractor=song.extractor or None,
+                    )
 
                 songsDict[song.weburl] = ormsong
 
@@ -309,6 +290,10 @@ def fullSync(syncdata: schemas.FullSync, db: Session):
             association.playlist = playlistDict[playlist.title]
 
         db.add(playlistDict[playlist.title])
+
+    for song in existingSongs.values():  # All unsynced songs
+        print("DELETING", song.title)
+        db.delete(song)
 
     db.commit()
 
