@@ -132,9 +132,6 @@ async def deletePlaylist(playlist_id: int, db: Session = Depends(getdb)):
     return "Deletion successful"
 
 
-# todo: delete playlist
-
-
 @app.get('/song', response_model=list[schemas.Song])
 async def getSongs(db: Session = Depends(getdb)):
     return db.query(models.Song).all()
