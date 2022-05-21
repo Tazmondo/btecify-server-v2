@@ -6,6 +6,7 @@ from typing import Union
 
 from fastapi import FastAPI, Depends, HTTPException, status, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 from yt_dlp.utils import DownloadError
 
@@ -248,7 +249,7 @@ async def fullDownload():
 
     try:
         allSongs = db.query(models.Song).filter(
-            (models.Song.data is None or models.Song.dataext is None) and not models.Song.disabled).all()
+            and_(or_(models.Song.data == None, models.Song.dataext == None), models.Song.disabled == False)).all()
         job_id = await crud.downloadExistingSongsJob(allSongs, db, finished)
         return job_id
     except Exception as e:
