@@ -14,6 +14,7 @@ import app.crud as crud
 import app.models as models
 import app.schemas as schemas
 from app.db import SessionLocal, engine
+from app.extractor import get_data
 from app.jobmanager import jobs, get_job, delete_job
 from app.models import Base
 
@@ -163,13 +164,15 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
     if dbsong.disabled:
         raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
 
-    if not dbsong.data:
+    if not dbsong.data_uuid:
         try:
             await crud.getSongSource(dbsong, db)
         except DownloadError as e:
             raise HTTPException(469, "Could not download")
 
-    data_length = len(dbsong.data)
+    song_data = get_data(dbsong.data_uuid, dbsong.dataext)
+
+    data_length = len(song_data)
 
     # So that the audio player can seek to given times
     # If 206 is not returned then (on chromium at least), audio player cannot seek
@@ -177,7 +180,7 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
     # Content range (i assume) is the range of bytes of this response, used by the player
     #   to construct audio from chunks, but here we just send it all at once.
     #       it might be better to send it chunked but i cba to write that code rn
-    return StreamingResponse(io.BytesIO(dbsong.data), media_type=f"audio/{dbsong.dataext}", status_code=206, headers={
+    return StreamingResponse(io.BytesIO(song_data), media_type=f"audio/{dbsong.dataext}", status_code=206, headers={
         "Accept-Ranges": 'bytes',
         "Content-Length": str(data_length),
         "Content-Range": f"bytes 0-{str(data_length - 1)}/{str(data_length)}"
@@ -212,8 +215,9 @@ async def getThumb(thumbid: int, db: Session = Depends(getdb)):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Thumbnail not found")
 
     ext = thumb.ext
+    data = get_data(thumb.data_uuid, thumb.ext)
 
-    return StreamingResponse(io.BytesIO(thumb.data), media_type=f"image/{ext}", headers={
+    return StreamingResponse(io.BytesIO(data), media_type=f"image/{ext}", headers={
         "cache-control": "public, max-age=31536000"  # Cache for one year
     })
 
@@ -249,7 +253,7 @@ async def fullDownload():
 
     try:
         allSongs = db.query(models.Song).filter(
-            and_(or_(models.Song.data == None, models.Song.dataext == None), models.Song.disabled == False)).all()
+            and_(or_(models.Song.data_uuid == None, models.Song.dataext == None), models.Song.disabled == False)).all()
         job_id = await crud.downloadExistingSongsJob(allSongs, db, finished)
         return job_id
     except Exception as e:

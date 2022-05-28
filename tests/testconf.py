@@ -28,7 +28,7 @@ def make_test_db():
 
     thumbnail = Thumbnail(
         hash="a hash",
-        data=b'some image bytes',
+        data_uuid="a uuid",
         ext='png'
     )
 
@@ -37,7 +37,7 @@ def make_test_db():
         duration=50.3,
         extractor="youtube",
         disabled=True,
-        data=b'some sound bytes',
+        data_uuid="another uuid",
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=iSqnJPdyqFM",
         thumbnail=thumbnail
@@ -47,7 +47,7 @@ def make_test_db():
         duration=22.3,
         extractor="bandcamp",
         disabled=False,
-        data=b'some 2 sound bytes',
+        data_uuid="another uuid",
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=ggHN5ZJ8jkU",
         thumbnail=thumbnail
@@ -57,7 +57,7 @@ def make_test_db():
         duration=10.3,
         extractor="youtube",
         disabled=False,
-        data=b'some 3 sound bytes',
+        data_uuid="another uuid",
         dataext='mp4',
         weburl="https://www.youtube.com/watch?v=BbbcvFJ55F4",
         thumbnail=thumbnail

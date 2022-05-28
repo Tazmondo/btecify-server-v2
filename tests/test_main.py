@@ -142,6 +142,7 @@ def test_get_song():
 
 
 def test_get_song_src():
+    # todo: fix this test with data in files instead of db
     make_test_db()
     response = client.get('/song/3/src')
     assert (response.status_code == 206)
@@ -156,6 +157,7 @@ def test_get_song_src():
 
 # todo: fix me with the new way thumbnails are done
 def test_get_song_thumb():
+    # todo: fix this test with data in files instead of db
     make_test_db()
     response = client.get('/song/3/thumb')
     assert (response.status_code == 200)
@@ -167,6 +169,7 @@ def test_get_song_thumb():
 
 
 def test_post_song():
+    # todo: fix this test with data in files instead of db
     make_test_db()
     # Goals for this test:
     #   add a new song !

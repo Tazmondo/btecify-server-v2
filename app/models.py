@@ -25,7 +25,7 @@ class Song(Base):
     disabled = Column(Boolean, nullable=False, default=False)
 
     extractor = Column(String, nullable=True)
-    data = Column(LargeBinary, nullable=True)
+    data_uuid = Column(String, nullable=True)
     dataext = Column(String, nullable=True)
     weburl = Column(String, nullable=True, unique=True)
 
@@ -45,7 +45,7 @@ class Thumbnail(Base):
     __tablename__ = "thumbnail"
     id = Column(Integer, primary_key=True)
     hash = Column(String, nullable=False)
-    data = Column(LargeBinary, nullable=False)
+    data_uuid = Column(String, nullable=False)
     ext = Column(String, nullable=False)
 
 

@@ -20,7 +20,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
     except DownloadError:
         return False
 
-    if songDownload.data is None:
+    if songDownload.data_uuid is None:
         return False
 
     meta = songDownload.info
@@ -48,12 +48,12 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
             title=album
         )
 
-    thumbhash = md5(songDownload.thumbdata).hexdigest()
+    thumbhash = songDownload.thumb_hash
     thumbobj = db.query(models.Thumbnail).filter(models.Thumbnail.hash == thumbhash).first()
     if thumbobj is None:
         thumbobj = models.Thumbnail(
             hash=thumbhash,
-            data=songDownload.thumbdata,
+            data_uuid=songDownload.data_uuid,
             ext=songDownload.thumbext
         )
 
@@ -71,7 +71,7 @@ async def addSong(song: schemas.SongIn, playlists: list[int], db: Session) -> Un
             album=albumModel or None,
             playlists=playlist_additions,
             extractor=meta.get('extractor_key'),
-            data=songDownload.data,
+            data_uuid=songDownload.data_uuid,
             dataext=songDownload.dataext,
             thumbnail=thumbobj,
         )
@@ -135,26 +135,26 @@ async def downloadExistingSongs(songs: list[models.Song], db: Session):
 
 
 async def downloadExistingSong(song: models.Song, db: Session, force: bool = False):
-    if ((song.data is None or song.dataext is None) and not song.disabled) or force:
+    if ((song.data_uuid is None or song.dataext is None) and not song.disabled) or force:
         print(f"Fetching... {song.title} : {song.weburl}")
         try:
             songdownload = await downloadSong(song.weburl)
 
-            song.data = songdownload.data
+            song.data_uuid = songdownload.data_uuid
             song.dataext = songdownload.dataext
             song.extractor = songdownload.extractor
             song.duration = songdownload.info['duration']
 
             song.thumburl = songdownload.info['thumbnail']
 
-            thumbhash = md5(songdownload.thumbdata).hexdigest()
+            thumbhash = songdownload.thumb_hash
             thumbobj = db.query(models.Thumbnail).filter(models.Thumbnail.hash == thumbhash).first()
             if thumbobj:
                 song.thumbnail = thumbobj
             else:
                 song.thumbnail = models.Thumbnail(
                     hash=thumbhash,
-                    data=songdownload.thumbdata,
+                    data_uuid=songdownload.thumb_uuid,
                     ext=songdownload.thumbext
                 )
 
@@ -164,6 +164,8 @@ async def downloadExistingSong(song: models.Song, db: Session, force: bool = Fal
             if "video" in e.msg.lower():
                 print(f"\n\nDISABLING {song.title}, COULD BE UNAVAILABLE.\n{e.msg}\n")
                 song.disabled = True
+            else:
+                print(e)
             raise e
     return song
 

@@ -1,15 +1,15 @@
 """empty message
 
-Revision ID: 697676896d95
+Revision ID: d83b07b7177c
 Revises: 
-Create Date: 2022-05-02 23:11:52.890901
+Create Date: 2022-05-28 17:42:47.629382
 
 """
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = '697676896d95'
+revision = 'd83b07b7177c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,7 +37,7 @@ def upgrade():
     op.create_table('thumbnail',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('hash', sa.String(), nullable=False),
-                    sa.Column('data', sa.LargeBinary(), nullable=False),
+                    sa.Column('data_uuid', sa.String(), nullable=False),
                     sa.Column('ext', sa.String(), nullable=False),
                     sa.PrimaryKeyConstraint('id')
                     )
@@ -54,7 +54,7 @@ def upgrade():
                     sa.Column('duration', sa.Float(), nullable=True),
                     sa.Column('disabled', sa.Boolean(), nullable=False),
                     sa.Column('extractor', sa.String(), nullable=True),
-                    sa.Column('data', sa.LargeBinary(), nullable=True),
+                    sa.Column('data_uuid', sa.String(), nullable=True),
                     sa.Column('dataext', sa.String(), nullable=True),
                     sa.Column('weburl', sa.String(), nullable=True),
                     sa.Column('thumb_id', sa.String(), nullable=True),

@@ -1,4 +1,5 @@
 import asyncio
+from hashlib import md5
 from logging import Logger
 from pathlib import Path
 from urllib.parse import urlparse
@@ -12,9 +13,24 @@ locallogger = Logger("yt-dl logger", 100000)  # So that stdout isnt spammed by y
 
 extractDir = Path('./extractions')
 if not extractDir.exists():
-    extractDir.mkdir()
+    extractDir.mkdir(parents=True)
 
 [x.unlink() for x in extractDir.iterdir()]  # Remove any existing files
+
+db_dir = Path('./db/data').resolve()
+if not db_dir.exists():
+    db_dir.mkdir(parents=True)
+
+
+# todo: delete all files that don't belong to a current song
+#       to prevent buildup of unused files
+
+
+def get_data(uuid: str, ext: str) -> bytes:
+    song_path = db_dir.joinpath(f"{uuid}.{ext}")
+    with song_path.open("rb") as f:
+        data = f.read()
+    return data
 
 
 def readData(file: Path) -> bytes:
@@ -54,31 +70,36 @@ async def downloadSong(url: str) -> schemas.SongDownload:
 
     info = await loop.run_in_executor(None, extract, options, url)
 
-    file = Path(info['requested_downloads'][0]['filepath'])
-    thumbfile = Path(info['thumbnails'][-1]['filepath'])
+    extracted_file_path = Path(info['requested_downloads'][0]['filepath'])
+    extracted_thumb_path = Path(info['thumbnails'][-1]['filepath'])
+
+    datauuid = str(makeUUID())
+    thumbuuid = str(makeUUID())
 
     if info.get('_type') == "playlist":
-        file.unlink()
-        thumbfile.unlink()
+        extracted_file_path.unlink()
+        extracted_thumb_path.unlink()
         raise ValueError("Playlist url provided.")
 
-    try:  # Read music data
-        filedata = readData(file)
-        pass
-    except FileNotFoundError:
-        filedata = None
+    data_ext = info['ext']
+    thumb_ext = Path(urlparse(info['thumbnail']).path).suffix[1:]  # Get extension from web url, with period removed
 
-    try:  # Read music data
-        thumbdata = readData(thumbfile)
-        pass
-    except FileNotFoundError:
-        thumbdata = None
+    filedata = readData(extracted_file_path)
+    new_file_path = db_dir.joinpath(f"./{datauuid}.{data_ext}")
+    with new_file_path.open("wb") as f:
+        f.write(filedata)
+
+    thumbdata = readData(extracted_thumb_path)
+    new_file_path = db_dir.joinpath(f"./{thumbuuid}.{thumb_ext}")
+    with new_file_path.open("wb") as f:
+        f.write(thumbdata)
 
     return schemas.SongDownload(
-        data=filedata,
-        dataext=info['ext'],
-        thumbdata=thumbdata,
-        thumbext=Path(urlparse(info['thumbnail']).path).suffix[1:],  # Get extension from web url, with period removed
+        data_uuid=datauuid,
+        dataext=data_ext,
+        thumb_uuid=thumbuuid,
+        thumbext=thumb_ext,
+        thumb_hash=md5(thumbdata).hexdigest(),
         info=info,
         extractor=info['extractor_key']
     )
@@ -99,6 +120,7 @@ async def downloadPlaylist(url: str) -> schemas.PlaylistDownload:
 
 
 if __name__ == "__main__":
+
     options = {
         "format": "worstaudio",
     }
@@ -138,8 +160,7 @@ if __name__ == "__main__":
 
         print("done")
 
-
-    asyncio.run(start())
+    # asyncio.run(start())
 
 """
 Available options:

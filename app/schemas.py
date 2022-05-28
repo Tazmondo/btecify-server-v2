@@ -24,10 +24,11 @@ class Thumbnail(BaseModel):
 
 
 class SongDownload(BaseModel):
-    data: bytes
+    data_uuid: str
     dataext: str
-    thumbdata: bytes
+    thumb_uuid: str
     thumbext: str
+    thumb_hash: str
     info: dict
     extractor: str
 
