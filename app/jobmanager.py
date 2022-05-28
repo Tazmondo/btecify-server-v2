@@ -43,7 +43,10 @@ async def start_job(coroutines: list[Coroutine], on_finish: Coroutine = None) ->
         last_used=datetime.now(),
         status=(len(coroutines) == 0)  # if number of coroutines is 0 it isn't infinitely stuck on false
     )
-    job.coroutines = asyncio.gather(*[coroutine_wrapper(coroutine, job, on_finish) for coroutine in coroutines])
+    coroutines_to_await = [coroutine_wrapper(coroutine, job, on_finish) for coroutine in coroutines]
+    job.coroutines = asyncio.gather(*coroutines_to_await)
+    if len(coroutines_to_await) == 0:
+        await on_finish
     jobs[newjobid] = job
     return newjobid
 

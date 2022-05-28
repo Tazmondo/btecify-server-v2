@@ -121,6 +121,7 @@ async def downloadExistingSongsJob(songs: list[models.Song], db: Session, finish
         db.commit()
         if finish_func is not None:
             finish_func()
+        print("Commit and finish function successful")
 
     job_id = await start_job(download_coroutines, finished())
     return job_id
