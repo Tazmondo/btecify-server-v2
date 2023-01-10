@@ -180,6 +180,8 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
     # Content range (i assume) is the range of bytes of this response, used by the player
     #   to construct audio from chunks, but here we just send it all at once.
     #       it might be better to send it chunked but i cba to write that code rn
+    # May also just be able to return a status code of 200, indicating the whole data is being sent, however this may cause delays to the web player
+    # Especially for longer songs (side a and side b)
     return StreamingResponse(io.BytesIO(song_data), media_type=f"audio/{dbsong.dataext}", status_code=206, headers={
         "Accept-Ranges": 'bytes',
         "Content-Length": str(data_length),
