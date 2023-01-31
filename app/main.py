@@ -4,7 +4,7 @@ from datetime import datetime
 from os import environ
 from typing import Union
 
-from fastapi import FastAPI, Depends, HTTPException, status, Response, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Depends, HTTPException, status, Response, WebSocket, WebSocketDisconnect, Header
 from fastapi.responses import StreamingResponse
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
@@ -159,7 +159,9 @@ async def getSong(songid: int, db: Session = Depends(getdb)):
     },
     **getSongResponses
 })
-async def getSongSource(songid: int, db: Session = Depends(getdb)):
+async def getSongSource(songid: int,
+                        request_range: str | None = Header(default=None, alias="Range"),
+                        db: Session = Depends(getdb)):
     dbsong = getSongFromDb(songid, db)
     if dbsong.disabled:
         raise HTTPException(status.HTTP_410_GONE, "Song is disabled due to lack of a source")
@@ -174,19 +176,30 @@ async def getSongSource(songid: int, db: Session = Depends(getdb)):
 
     data_length = len(song_data)
 
+    # OLD COMMENT, REFERENCES CONTENTS OF FIRST BRANCH OF IF STATEMENT
     # So that the audio player can seek to given times
     # If 206 is not returned then (on chromium at least), audio player cannot seek
     # Content length is the total length of the content
     # Content range (i assume) is the range of bytes of this response, used by the player
     #   to construct audio from chunks, but here we just send it all at once.
     #       it might be better to send it chunked but i cba to write that code rn
-    # May also just be able to return a status code of 200, indicating the whole data is being sent, however this may cause delays to the web player
-    # Especially for longer songs (side a and side b)
-    return StreamingResponse(io.BytesIO(song_data), media_type=f"audio/{dbsong.dataext}", status_code=206, headers={
-        "Accept-Ranges": 'bytes',
-        "Content-Length": str(data_length),
-        "Content-Range": f"bytes 0-{str(data_length - 1)}/{str(data_length)}"
-    })
+
+    print(request_range)
+
+    if request_range is None or not request_range.startswith("bytes="):
+        return StreamingResponse(io.BytesIO(song_data), media_type=f"audio/{dbsong.dataext}", status_code=206, headers={
+            "Accept-Ranges": 'bytes',
+            "Content-Length": str(data_length),
+            "Content-Range": f"bytes 0-{str(data_length)}/{str(data_length)}"
+        })
+    else:
+        start_byte = int(request_range[6:-1])
+        song_data = song_data[start_byte:]
+        return StreamingResponse(io.BytesIO(song_data), media_type=f"audio/{dbsong.dataext}", status_code=206, headers={
+            "Accept-Ranges": 'bytes',
+            "Content-Length": str(data_length),
+            "Content-Range": f"bytes {str(start_byte)}-{str(data_length)}/{str(data_length)}"
+        })
 
 
 @app.get('/song/{songid}/thumb', response_model=str)
